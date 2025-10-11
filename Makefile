@@ -8,6 +8,38 @@ server:
 	@go build -o ./build/server ./cmd/server
 	@./build/server
 
+test\:help:
+	@printf "\
+	\n\
+	To run all tests:\
+	\n\
+		make test\
+	\n\n\
+	To test a path:\
+	\n\
+		make test path='path/to/your_test(s)'\
+	\n\n\
+	To test a scope in tests directory:\
+	\n\
+		make test scope=server\
+	\n\n\
+	To test in race mode:\
+	\n\
+		make test race=t\
+	\n\n\
+	To run tests by a filter:\
+	\n\
+		make test filter='UserBalance'\
+	\n\n\
+	To run tests x times:\
+	\n\
+		make test count=10\
+	\n\n\
+	To run tests with detail:\
+	\n\
+		make test verbose=t\
+	"
+
 test:
 	@go test -p 1 \
 		$(if $(path), $(path), $(if $(scope), ./tests/$(scope)/*, ./...)) \
