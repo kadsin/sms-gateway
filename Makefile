@@ -4,6 +4,10 @@ init:
 	@echo - Installing dependencies ...
 	go mod download
 
+server:
+	@go build -o ./build/server ./cmd/server
+	@./build/server
+
 test:
 	@go test -p 1 \
 		$(if $(path), $(path), $(if $(scope), ./tests/$(scope)/*, ./...)) \
