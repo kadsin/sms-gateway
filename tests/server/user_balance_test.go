@@ -41,6 +41,14 @@ func Test_UserBalance_NewUser(t *testing.T) {
 	resp, _ := app.Test(req)
 	require.Equal(t, resp.StatusCode, fiber.StatusOK)
 
+	type Payload struct {
+		Data struct {
+			ID string `json:"id"`
+		} `json:"data"`
+	}
+	responseBody := unmarshalResponseBody[Payload](resp)
+	require.Regexp(t, "^.{8}-.{4}-.{4}-.{4}-.{12}$", responseBody.Data.ID)
+
 	var user models.User
 	tx := database.Instance().First(&user, "email", "test@example.com")
 

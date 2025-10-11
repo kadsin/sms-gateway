@@ -13,9 +13,16 @@ func ChangeUserBalance(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, err.Error())
 	}
 
+	var user models.User
 	tx := database.Instance().Where("email", data.Email).
 		Assign("balance", data.Balance).
-		FirstOrCreate(&models.User{})
+		FirstOrCreate(&user)
 
-	return tx.Error
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"id": user.ID,
+	})
 }
