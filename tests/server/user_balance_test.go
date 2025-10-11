@@ -24,12 +24,12 @@ func Test_UserBalance_BadData(t *testing.T) {
 	resp, _ := app.Test(req)
 	require.Equal(t, resp.StatusCode, fiber.ErrUnprocessableEntity.Code)
 
-	tx := database.Instance().First(&models.User{}, "email = ?", "bad")
+	tx := database.Instance().First(&models.User{}, "email", "bad")
 
 	require.ErrorIs(t, tx.Error, gorm.ErrRecordNotFound)
 }
 
-func Test_UserBalance_Success(t *testing.T) {
+func Test_UserBalance_NewUser(t *testing.T) {
 	jsonBody := `{
 		"email": "test@example.com",
 		"balance": 100000
@@ -42,9 +42,32 @@ func Test_UserBalance_Success(t *testing.T) {
 	require.Equal(t, resp.StatusCode, fiber.StatusOK)
 
 	var user models.User
-	tx := database.Instance().First(&user, "email = ?", "test@example.com")
+	tx := database.Instance().First(&user, "email", "test@example.com")
 
 	require.NotErrorIs(t, tx.Error, gorm.ErrRecordNotFound)
 	require.NotEqual(t, user.ID.String(), "00000000-0000-0000-0000-000000000000")
 	require.Equal(t, user.Balance, float32(100000))
+}
+
+func Test_UserBalance_UpdateOldUser(t *testing.T) {
+	database.Instance().Create(&models.User{
+		Email:   "test@example.com",
+		Balance: 1000.55,
+	})
+
+	jsonBody := `{
+		"email": "test@example.com",
+		"balance": 200000
+	}`
+
+	req := httptest.NewRequest(fiber.MethodPost, "/api/user/balance", bytes.NewReader([]byte(jsonBody)))
+	req.Header.Set("Content-Type", "application/json")
+
+	app.Test(req)
+
+	var users []models.User
+	database.Instance().Model(&models.User{}).Where("email", "test@example.com").Scan(&users)
+
+	require.Len(t, users, 1)
+	require.Equal(t, users[0].Balance, float32(200000))
 }
