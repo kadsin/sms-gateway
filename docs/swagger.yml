@@ -11,9 +11,9 @@ servers:
               default: 3000
 
 paths:
-    /api/example:
-        get:
-            summary: An example
+    /api/user/balance:
+        post:
+            summary: Create a user or update balance
             requestBody:
                 required: true
                 content:
@@ -21,10 +21,46 @@ paths:
                         schema:
                             type: object
                             properties:
-                                name:
+                                email:
                                     type: string
+                                balance:
+                                    type: number
                             required:
-                                - name
+                                - email
+                                - balance
             responses:
                 '200':
-                    description: Successful
+                    description: Balance applied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data:
+                                        type: object
+                                        properties:
+                                            id:
+                                                type: string
+                                                default: "2feff503-2bd3-41da-b0dd-b27101fd0031"
+                                        required:
+                                            - id
+                '400':
+                    $ref: '#/components/responses/ValidationFailed'
+
+components:
+    responses:
+        ValidationFailed:
+            description: Validation failed
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            errors:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        detail:
+                                            type: string
+                                            example: Validation error
