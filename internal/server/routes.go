@@ -5,10 +5,14 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/basicauth"
 	"github.com/gofiber/swagger"
 	"github.com/kadsin/sms-gateway/config"
+	"github.com/kadsin/sms-gateway/internal/server/handlers"
 )
 
 func SetupRoutes(app *fiber.App) {
 	setupSwagger(app.Group("/docs"))
+
+	api := app.Group("/api")
+	api.Post("/user/balance", handlers.ChangeUserBalance)
 }
 
 func setupSwagger(router fiber.Router) {
