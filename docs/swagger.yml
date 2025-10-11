@@ -1,0 +1,30 @@
+openapi: 3.0.0
+info:
+    title: SMS Gateway
+    version: 0.0.1
+    description: Arvancloud Challange
+servers:
+    - url: http://localhost:{port}
+      description: Local development server
+      variables:
+          port:
+              default: 3000
+
+paths:
+    /api/example:
+        get:
+            summary: An example
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                            required:
+                                - name
+            responses:
+                '200':
+                    description: Successful
