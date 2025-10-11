@@ -47,4 +47,11 @@ var Env struct {
 		Password   string `env:"DB_PASSWORD"`
 		Name       string `env:"DB_NAME"`
 	}
+
+	Doc struct {
+		Auth struct {
+			Username string `env:"DOC_AUTH_USERNAME"`
+			Password string `env:"DOC_AUTH_PASSWORD"`
+		}
+	}
 }
