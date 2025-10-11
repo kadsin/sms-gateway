@@ -1,0 +1,19 @@
+name: sms-gateway
+
+services:
+    db:
+        image: postgres:18-alpine
+        environment:
+            POSTGRES_USER: ${DB_USERNAME}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+            PGDATA: /data/postgres
+            POSTGRES_DB: ${DB_NAME}
+        volumes:
+            - ../postgres-data:/data/postgres
+        ports:
+            - '5332:5432'
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -d postgres']
+            interval: 30s
+            timeout: 10s
+            retries: 5

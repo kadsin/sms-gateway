@@ -38,4 +38,13 @@ var Env struct {
 		Environment string `env:"APP_ENV"`
 		Debug       bool   `env:"APP_DEBUG"`
 	}
+
+	DB struct {
+		Connection string `env:"DB_CONNECTION"`
+		Host       string `env:"DB_HOST"`
+		Port       string `env:"DB_PORT"`
+		Username   string `env:"DB_USERNAME"`
+		Password   string `env:"DB_PASSWORD"`
+		Name       string `env:"DB_NAME"`
+	}
 }
