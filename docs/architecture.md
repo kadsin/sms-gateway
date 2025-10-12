@@ -7,13 +7,13 @@ sequenceDiagram
     Actor c as Client
     Participant s as HTTP Server
     Participant pdb as Postgres
-    Participant mb as RabbitMQ
+    Participant mb as Kafka
     Participant w as Queue Worker
-    Note right of w : The queue workers are<br>free to listen on expres<br>route or regular
+    Note right of w : The queue workers are<br>free to listen on express<br>topic or regular
     Participant cdb as ClickHouse
     Actor r as Receiver
 
-w->r : Listen on topics
+w->mb : Listen on topics
 
 c->>s : Send a message
 s->pdb : Deduct message price
@@ -25,13 +25,14 @@ end
 s->>mb : message.pending
 Note left of mb : It can publish on express<br>queue or regular
 s-->>c : Ok [requestId]
-mb->>w : message.pending<br>{isRedelivered: bool}
+mb->>w : message.pending<br>{maxRetry: int, retried: int}
 break Can't send sms
-    alt message is redelivered
-        w->pdb : Increase balance by message price
-        w->mb : Log as failed
-    else
+    alt retried < maxRetry
+        w->w : Increase message.retried
         w->mb : Redeliver message
+    else
+        w->pdb : Increase balance by message price
+        w->cdb : Log as failed
     end
 end
 w-->>r: Send via a provider
@@ -49,7 +50,7 @@ flowchart LR
     subgraph Server_Side["HTTP Server (API)"]
         hs[API Server]
         pdb[(PostgreSQL)]
-        mb[(RabbitMQ)]
+        mb[(Kafka)]
     end
 
     subgraph Worker_Side["Worker Service"]
