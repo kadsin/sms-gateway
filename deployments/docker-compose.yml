@@ -17,3 +17,16 @@ services:
             interval: 30s
             timeout: 10s
             retries: 5
+    server:
+        build:
+            context: ..
+            dockerfile: ./deployments/Dockerfile
+        environment:
+            DB_HOST: db
+            DB_PORT: 5432
+        depends_on:
+            db:
+                condition: service_healthy
+                restart: true
+        ports:
+            - 3030:3000
