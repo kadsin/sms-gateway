@@ -22,23 +22,31 @@ make server
 
 ## Testing
 
+Show help for testing options:
+
+```bash
+make test:help
+```
+
+Run all tests:
+
 ```bash
 make test
 ```
 
 Optional flags:
 
-* `path=./pkg/utils`
-* `scope=api`
-* `filter=Login`
-* `verbose=true`
-* `race=true`
-* `count=3`
+-   `path=./pkg/utils` – test a specific path
+-   `scope=server` – test a specific scope in `./tests/`
+-   `filter=UserBalance` – run tests matching a filter
+-   `verbose=t` – run tests with detailed output
+-   `race=t` – run tests in race detection mode
+-   `count=3` – run tests multiple times
 
 Example:
 
 ```bash
-make test verbose=true filter=UserHandler
+make test verbose=t filter=UserHandler race=t
 ```
 
 ---
@@ -54,19 +62,76 @@ make docker:down   # stop containers
 
 ## Migrations
 
+### Database Migrations
+
+Create a new migration:
+
 ```bash
-make migrate:create name="add_table"
-make migrate        # apply
-make migrate:rollback
-make migrate:status
+make migrate:db:create name="add_table"
+```
+
+Apply migrations:
+
+```bash
+make migrate:db
+```
+
+Rollback last migration:
+
+```bash
+make migrate:db:rollback
+```
+
+Check migration version:
+
+```bash
+make migrate:db:version
+```
+
+Check migration status:
+
+```bash
+make migrate:db:status
+```
+
+### Analytics Migrations
+
+Create a new migration:
+
+```bash
+make migrate:analytics:create name="add_table"
+```
+
+Apply migrations:
+
+```bash
+make migrate:analytics
+```
+
+Rollback last migration:
+
+```bash
+make migrate:analytics:rollback
+```
+
+Check migration version:
+
+```bash
+make migrate:analytics:version
+```
+
+Check migration status:
+
+```bash
+make migrate:analytics:status
 ```
 
 ---
 
 ## Swagger Docs
 
-* **URL:** [http://localhost:3000/docs](http://localhost:3000/docs)
-* **Username:** `admin`
-* **Password:** `123456`
+-   **URL:** [http://localhost:3000/docs](http://localhost:3000/docs)
+-   **Username:** `admin`
+-   **Password:** `123456`
 
-Note that you can change username and password in `.env`.
+You can change the username and password in `.env`.

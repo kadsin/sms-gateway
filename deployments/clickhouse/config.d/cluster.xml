@@ -1,0 +1,21 @@
+<clickhouse>
+    <listen_host>0.0.0.0</listen_host>
+
+    <zookeeper>
+        <node>
+            <host>ch-keeper</host>
+            <port>9181</port>
+        </node>
+    </zookeeper>
+
+    <remote_servers> 
+        <default>
+            <shard>
+                <replica>
+                    <host>ch</host>
+                    <port>9000</port>
+                </replica>
+            </shard>
+        </default>
+    </remote_servers>
+</clickhouse>

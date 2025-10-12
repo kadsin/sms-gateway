@@ -8,9 +8,10 @@ import (
 	"path/filepath"
 	"runtime"
 
-	// It should load to execute all migration's init functions
 	"github.com/kadsin/sms-gateway/config"
 	"github.com/kadsin/sms-gateway/database"
+
+	// It should load to execute all migration's init functions
 	_ "github.com/kadsin/sms-gateway/database/migrations"
 
 	"github.com/pressly/goose/v3"

@@ -12,5 +12,3 @@ vendor/
 
 .env
 .env.testing
-
-postgres-data

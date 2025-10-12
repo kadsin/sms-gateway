@@ -48,6 +48,16 @@ var Env struct {
 		Name       string `env:"DB_NAME"`
 	}
 
+	Analytics struct {
+		Connection string `env:"ANALYTICS_DB_CONNECTION"`
+		Host       string `env:"ANALYTICS_DB_HOST"`
+		Cluster    string `env:"ANALYTICS_DB_CLUSTER,default=default"`
+		Port       string `env:"ANALYTICS_DB_PORT"`
+		Username   string `env:"ANALYTICS_DB_USERNAME"`
+		Password   string `env:"ANALYTICS_DB_PASSWORD"`
+		Name       string `env:"ANALYTICS_DB_NAME"`
+	}
+
 	Doc struct {
 		Auth struct {
 			Username string `env:"DOC_AUTH_USERNAME"`
