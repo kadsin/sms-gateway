@@ -26,7 +26,7 @@ func Connect() (*gorm.DB, error) {
 
 func Instance() *gorm.DB {
 	if db == nil {
-		log.Fatal("Database not connected. Call database.Connect() first.")
+		log.Fatal("Database not connected. Call analytics.Connect() first.")
 	}
 	return db
 }

@@ -61,21 +61,41 @@ docker\:down:
 
 -include .env
 
-GOOSE_NAME:= database-migrator-cli
-BUILD_GOOSE:= go build -o ./build/$(GOOSE_NAME) ./cmd/$(GOOSE_NAME)
-GOOSE_CMD := $(BUILD_GOOSE) && ./build/$(GOOSE_NAME)
+DB_GOOSE_NAME:= database-migrator-cli
+BUILD_DB_GOOSE:= go build -o ./build/$(DB_GOOSE_NAME) ./cmd/$(DB_GOOSE_NAME)
+DB_GOOSE_CMD := $(BUILD_DB_GOOSE) && ./build/$(DB_GOOSE_NAME)
 
-migrate\:create:
-	@$(GOOSE_CMD) create "$(name)" go
+migrate\:db\:create:
+	@$(DB_GOOSE_CMD) create "$(name)" go
 
-migrate:
-	@$(GOOSE_CMD) up
+migrate\:db:
+	@$(DB_GOOSE_CMD) up
 
-migrate\:rollback:
-	@$(GOOSE_CMD) down
+migrate\:db\:rollback:
+	@$(DB_GOOSE_CMD) down
 
-migrate\:version:
-	@$(GOOSE_CMD) version
+migrate\:db\:version:
+	@$(DB_GOOSE_CMD) version
 
-migrate\:status:
-	@$(GOOSE_CMD) status
+migrate\:db\:status:
+	@$(DB_GOOSE_CMD) status
+
+
+ANALYTICS_GOOSE_NAME:= analytics-migrator-cli
+BUILD_ANALYTICS_GOOSE:= go build -o ./build/$(ANALYTICS_GOOSE_NAME) ./cmd/$(ANALYTICS_GOOSE_NAME)
+ANALYTICS_GOOSE_CMD := $(BUILD_ANALYTICS_GOOSE) && ./build/$(ANALYTICS_GOOSE_NAME)
+
+migrate\:analytics\:create:
+	@$(ANALYTICS_GOOSE_CMD) create "$(name)" go
+
+migrate\:analytics:
+	@$(ANALYTICS_GOOSE_CMD) up
+
+migrate\:analytics\:rollback:
+	@$(ANALYTICS_GOOSE_CMD) down
+
+migrate\:analytics\:version:
+	@$(ANALYTICS_GOOSE_CMD) version
+
+migrate\:analytics\:status:
+	@$(ANALYTICS_GOOSE_CMD) status
