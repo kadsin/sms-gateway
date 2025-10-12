@@ -1,7 +1,7 @@
 name: sms-gateway
 
 services:
-    db:
+    pg:
         image: postgres:18-alpine
         environment:
             POSTGRES_USER: ${DB_USERNAME}
@@ -9,7 +9,7 @@ services:
             PGDATA: /data/postgres
             POSTGRES_DB: ${DB_NAME}
         volumes:
-            - ../postgres-data:/data/postgres
+            - postgres_data:/data/postgres
         ports:
             - '5332:5432'
         healthcheck:
@@ -17,16 +17,56 @@ services:
             interval: 30s
             timeout: 10s
             retries: 5
+
     server:
         build:
             context: ..
             dockerfile: ./deployments/Dockerfile
         environment:
-            DB_HOST: db
+            DB_CONNECTION: postgres
+            DB_HOST: pg
             DB_PORT: 5432
+            ANALYTICS_DB_CONNECTION: clickhouse
+            ANALYTICS_DB_HOST: ch
+            ANALYTICS_DB_PORT: 9000
         depends_on:
-            db:
+            pg:
                 condition: service_healthy
                 restart: true
+            ch:
+                condition: service_started
         ports:
             - 3030:3000
+
+    ch-keeper:
+        image: clickhouse/clickhouse-keeper:25.8
+        ports:
+            - '9182:9181'
+        volumes:
+            - ./clickhouse/keeper_config.xml:/etc/clickhouse-keeper/keeper_config.xml
+        healthcheck:
+            test: ['CMD', 'nc', '-z', 'ch-keeper', '9181']
+            interval: 5s
+            retries: 10
+
+    ch:
+        image: clickhouse/clickhouse-server:25.8
+        environment:
+            CLICKHOUSE_DB: ${ANALYTICS_DB_NAME}
+            CLICKHOUSE_USER: ${ANALYTICS_DB_USERNAME}
+            CLICKHOUSE_PASSWORD: ${ANALYTICS_DB_PASSWORD}
+            CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+        volumes:
+            - clickhouse_data:/var/lib/clickhouse
+            - ./clickhouse/config.d:/etc/clickhouse-server/config.d
+        ports:
+            - '9090:9000'
+        depends_on:
+            ch-keeper:
+                condition: service_healthy
+
+volumes:
+    clickhouse_data:
+        driver: local
+    postgres_data:
+        driver: local
