@@ -65,13 +65,14 @@ var Env struct {
 		}
 	}
 
-	Queue struct {
-		Driver string `env:"QUEUE_DRIVER"`
-		Host   string `env:"QUEUE_HOST"`
-		Port   string `env:"QUEUE_PORT"`
-		Names  struct {
-			Regular string `env:"QUEUE_NAME_REGULAR"`
-			Express string `env:"QUEUE_NAME_EXPRESS"`
+	Kafka struct {
+		Brokers  []string `env:"KAFKA_BROKERS,default=localhost"`
+		Username string   `env:"KAFKA_USERNAME"`
+		Password string   `env:"KAFKA_PASSWORD"`
+
+		Topics struct {
+			Regular string `env:"KAFKA_TOPIC_REGULAR"`
+			Express string `env:"KAFKA_TOPIC_EXPRESS"`
 		}
 	}
 }

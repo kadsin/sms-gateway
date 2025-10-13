@@ -86,9 +86,9 @@ services:
     init-kafka-topics:
         image: apache/kafka:4.1.0
         environment:
-            TOPIC_REGULAR: ${QUEUE_NAME_REGULAR}
+            TOPIC_REGULAR: ${KAFKA_TOPIC_REGULAR}
             TOPIC_REGULAR_PARTITIONS: ${TOPIC_REGULAR_PARTITIONS:-2}
-            TOPIC_EXPRESS: ${QUEUE_NAME_EXPRESS}
+            TOPIC_EXPRESS: ${KAFKA_TOPIC_EXPRESS}
             TOPIC_EXPRESS_PARTITIONS: ${TOPIC_EXPRESS_PARTITIONS:-4}
             KAFKA_SERVER: "kafka:9092"
         depends_on:
