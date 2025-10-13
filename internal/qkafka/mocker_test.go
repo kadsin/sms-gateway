@@ -36,7 +36,7 @@ func (mp *ConsumerMock) Close() error {
 func Test_MockQKafkaProducer(t *testing.T) {
 	qkafka.MockProducer(&ProducerMock{})
 
-	p := qkafka.NewProducer(kafka.WriterConfig{})
+	p := qkafka.Producer()
 	require.IsType(t, &ProducerMock{}, p)
 }
 

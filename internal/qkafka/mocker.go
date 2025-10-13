@@ -1,13 +1,11 @@
 package qkafka
 
-var producerMock Producer = nil
+var consumerMock consumer = nil
 
-var consumerMock Consumer = nil
-
-func MockProducer(m Producer) {
-	producerMock = m
+func MockProducer(m producer) {
+	producerInstance = m
 }
 
-func MockConsumer(m Consumer) {
+func MockConsumer(m consumer) {
 	consumerMock = m
 }
