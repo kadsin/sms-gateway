@@ -32,8 +32,9 @@ services:
         depends_on:
             pg:
                 condition: service_healthy
-                restart: true
             ch:
+                condition: service_started
+            kafka:
                 condition: service_started
         ports:
             - 3030:3000
@@ -65,8 +66,59 @@ services:
             ch-keeper:
                 condition: service_healthy
 
+    kafka:
+        image: apache/kafka:4.1.0
+        environment:
+            KAFKA_BROKER_ID: 1
+            KAFKA_KRAFT_MODE: 'true'
+            KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,EXTERNAL://0.0.0.0:9094,CONTROLLER://0.0.0.0:9093
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+            KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+            KAFKA_PROCESS_ROLES: broker,controller
+            KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+            KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
+        volumes:
+            - kafka_data:/var/lib/kafka/data
+        ports:
+            - '9094:9094'
+
+    init-kafka-topics:
+        image: apache/kafka:4.1.0
+        environment:
+            TOPIC_REGULAR: ${QUEUE_NAME_REGULAR}
+            TOPIC_REGULAR_PARTITIONS: ${TOPIC_REGULAR_PARTITIONS:-2}
+            TOPIC_EXPRESS: ${QUEUE_NAME_EXPRESS}
+            TOPIC_EXPRESS_PARTITIONS: ${TOPIC_EXPRESS_PARTITIONS:-4}
+            KAFKA_SERVER: "kafka:9092"
+        depends_on:
+            - kafka
+        entrypoint: [ '/bin/sh', '-c' ]
+        command: |
+            "
+            cd /opt/kafka/bin/;
+
+            echo -e 'Waiting for cluster...'
+            until ./kafka-cluster.sh cluster-id --bootstrap-server $${KAFKA_SERVER} >/dev/null 2>&1; do
+                echo 'Kafka not ready, retrying...'
+                sleep 2
+            done
+
+            echo -e 'Creating kafka topics...'
+            ./kafka-topics.sh --create --topic $${TOPIC_REGULAR} --bootstrap-server $${KAFKA_SERVER} --partitions $${TOPIC_REGULAR_PARTITIONS} --replication-factor 1 --config retention.ms=3600;
+            ./kafka-topics.sh --create --topic $${TOPIC_EXPRESS} --bootstrap-server $${KAFKA_SERVER} --partitions $${TOPIC_EXPRESS_PARTITIONS} --replication-factor 1 --config retention.ms=3600;
+
+            echo -e 'Creating internal topic: __consumer_offsets...'
+            ./kafka-topics.sh --create --topic __consumer_offsets --bootstrap-server $${KAFKA_SERVER} --partitions 10 --replication-factor 1;
+
+            echo -e 'Successfully created the following topics:'
+            ./kafka-topics.sh --bootstrap-server $${KAFKA_SERVER} --list
+            "
+
 volumes:
     clickhouse_data:
         driver: local
     postgres_data:
+        driver: local
+    kafka_data:
         driver: local

@@ -64,4 +64,14 @@ var Env struct {
 			Password string `env:"DOC_AUTH_PASSWORD"`
 		}
 	}
+
+	Queue struct {
+		Driver string `env:"QUEUE_DRIVER"`
+		Host   string `env:"QUEUE_HOST"`
+		Port   string `env:"QUEUE_PORT"`
+		Names  struct {
+			Regular string `env:"QUEUE_NAME_REGULAR"`
+			Express string `env:"QUEUE_NAME_EXPRESS"`
+		}
+	}
 }
