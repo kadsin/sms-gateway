@@ -121,3 +121,38 @@ func Test_SendSms_Express(t *testing.T) {
 	_, err := c.FetchMessage(context.Background())
 	require.Nil(t, err)
 }
+
+func Test_SendSms_SuccessfulResponse(t *testing.T) {
+	user := createUser()
+
+	jsonBody := fmt.Sprintf(`{
+        "client_email": "%s",
+        "receiver_phone": "+989123456789",
+        "content": "aqfdvsvsdvs",
+        "is_express": false
+	}`, user.Email)
+
+	req := httptest.NewRequest(fiber.MethodPost, "/api/sms", bytes.NewReader([]byte(jsonBody)))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, _ := app.Test(req)
+
+	c := container.KafkaConsumer("")
+	defer container.KafkaProducer().Close()
+	c.(*mocks.KafkaConsumerMock).Topic = config.Env.Kafka.Topics.Regular
+
+	m, _ := c.FetchMessage(context.Background())
+	sms, _ := dtos.Unmarshal[messages.Sms](m.Value)
+
+	type Payload struct {
+		Data struct {
+			MessageId string  `json:"message_id"`
+			Price     float32 `json:"price"`
+		} `json:"data"`
+	}
+
+	responseBody := unmarshalResponseBody[Payload](resp)
+
+	require.Equal(t, sms.Id, responseBody.Data.MessageId)
+	require.Equal(t, sms.Price, responseBody.Data.Price)
+}
