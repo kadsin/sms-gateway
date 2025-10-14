@@ -98,3 +98,26 @@ func Test_SendSms_ValidateBalance(t *testing.T) {
 	_, err := c.FetchMessage(context.Background())
 	require.NotNil(t, err)
 }
+
+func Test_SendSms_Express(t *testing.T) {
+	user := createUser()
+
+	jsonBody := fmt.Sprintf(`{
+        "client_email": "%s",
+        "receiver_phone": "+989123456789",
+        "content": "abcdefg",
+        "is_express": true
+	}`, user.Email)
+
+	req := httptest.NewRequest(fiber.MethodPost, "/api/sms", bytes.NewReader([]byte(jsonBody)))
+	req.Header.Set("Content-Type", "application/json")
+
+	app.Test(req)
+
+	c := container.KafkaConsumer("")
+	defer container.KafkaProducer().Close()
+	c.(*mocks.KafkaConsumerMock).Topic = config.Env.Kafka.Topics.Express
+
+	_, err := c.FetchMessage(context.Background())
+	require.Nil(t, err)
+}
