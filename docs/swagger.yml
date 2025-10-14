@@ -47,6 +47,53 @@ paths:
                 '400':
                     $ref: '#/components/responses/ValidationFailed'
 
+    /api/sms:
+        post:
+            summary: Send SMS
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                client_email:
+                                    type: string
+                                receiver_phone:
+                                    type: string
+                                content:
+                                    type: string
+                                is_express:
+                                    type: boolean
+                            required:
+                                - client_email
+                                - receiver_phone
+                                - content
+                                - is_express
+            responses:
+                '200':
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data:
+                                        type: object
+                                        properties:
+                                            message_id:
+                                                type: string
+                                                default: "2feff503-2bd3-41da-b0dd-b27101fd0031"
+                                            price:
+                                                type: number
+                                                default: 52.6
+                                        required:
+                                            - message_id
+                                            - price
+                '400':
+                    $ref: '#/components/responses/ValidationFailed'
+                '402':
+                    description: Payment requiered
+
 components:
     responses:
         ValidationFailed:
