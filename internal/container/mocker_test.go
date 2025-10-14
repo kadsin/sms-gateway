@@ -1,38 +1,13 @@
 package container_test
 
 import (
-	"context"
 	"os"
 	"testing"
 
 	"github.com/kadsin/sms-gateway/internal/container"
-	"github.com/segmentio/kafka-go"
+	"github.com/kadsin/sms-gateway/tests/mocks"
 	"github.com/stretchr/testify/require"
 )
-
-type ProducerMock struct{}
-
-func (mp *ProducerMock) SendMessage(ctx context.Context, m kafka.Message) error {
-	return nil
-}
-
-func (mp *ProducerMock) Close() error {
-	return nil
-}
-
-type ConsumerMock struct{}
-
-func (mp *ConsumerMock) FetchMessage(ctx context.Context) (kafka.Message, error) {
-	return kafka.Message{}, nil
-}
-
-func (mp *ConsumerMock) Commit(ctx context.Context, msgs ...kafka.Message) error {
-	return nil
-}
-
-func (mp *ConsumerMock) Close() error {
-	return nil
-}
 
 func TestMain(m *testing.M) {
 	container.Init()
@@ -44,15 +19,15 @@ func TestMain(m *testing.M) {
 }
 
 func Test_Mock_KafkaProducer(t *testing.T) {
-	container.MockKafkaProducer(&ProducerMock{})
+	container.MockKafkaProducer(&mocks.KafkaProducerMock{})
 
 	p := container.KafkaProducer()
-	require.IsType(t, &ProducerMock{}, p)
+	require.IsType(t, &mocks.KafkaProducerMock{}, p)
 }
 
 func Test_Mock_KafkaConsumer(t *testing.T) {
-	container.MockKafkaConsumer(&ConsumerMock{})
+	container.MockKafkaConsumer(&mocks.KafkaConsumerMock{})
 
 	p := container.KafkaConsumer("test")
-	require.IsType(t, &ConsumerMock{}, p)
+	require.IsType(t, &mocks.KafkaConsumerMock{}, p)
 }
