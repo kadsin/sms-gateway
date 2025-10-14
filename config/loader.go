@@ -58,6 +58,14 @@ var Env struct {
 		Name       string `env:"ANALYTICS_DB_NAME"`
 	}
 
+	Redis struct {
+		Host     string `env:"REDIS_HOST,default=localhost"`
+		Port     string `env:"REDIS_PORT,default=6379"`
+		Database int    `env:"REDIS_DATABASE,default=0"`
+		Username string `env:"REDIS_USERNAME,default=default"`
+		Password string `env:"REDIS_PASSWORD"`
+	}
+
 	Doc struct {
 		Auth struct {
 			Username string `env:"DOC_AUTH_USERNAME"`
