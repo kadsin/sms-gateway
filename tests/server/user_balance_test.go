@@ -2,6 +2,7 @@ package server_test
 
 import (
 	"bytes"
+	"fmt"
 	"net/http/httptest"
 	"testing"
 
@@ -58,15 +59,12 @@ func Test_UserBalance_NewUser(t *testing.T) {
 }
 
 func Test_UserBalance_UpdateOldUser(t *testing.T) {
-	container.DB().Create(&models.User{
-		Email:   "test@example.com",
-		Balance: 1000.55,
-	})
+	user := createUser()
 
-	jsonBody := `{
-		"email": "test@example.com",
+	jsonBody := fmt.Sprintf(`{
+		"email": "%s",
 		"balance": 200000
-	}`
+	}`, user.Email)
 
 	req := httptest.NewRequest(fiber.MethodPost, "/api/user/balance", bytes.NewReader([]byte(jsonBody)))
 	req.Header.Set("Content-Type", "application/json")
@@ -74,7 +72,7 @@ func Test_UserBalance_UpdateOldUser(t *testing.T) {
 	app.Test(req)
 
 	var users []models.User
-	container.DB().Model(&models.User{}).Where("email", "test@example.com").Scan(&users)
+	container.DB().Model(&models.User{}).Where("email", user.Email).Scan(&users)
 
 	require.Len(t, users, 1)
 	require.Equal(t, users[0].Balance, float32(200000))
