@@ -12,7 +12,10 @@ func SetupRoutes(app *fiber.App) {
 	setupSwagger(app.Group("/docs"))
 
 	api := app.Group("/api")
+
 	api.Post("/user/balance", handlers.ChangeUserBalance)
+
+	api.Post("/sms", handlers.SendSms)
 }
 
 func setupSwagger(router fiber.Router) {

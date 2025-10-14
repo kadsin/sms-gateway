@@ -1,0 +1,8 @@
+package requests
+
+type SmsRequest struct {
+	ClientEmail   string `json:"client_email" validate:"required,email"`
+	ReceiverPhone string `json:"receiver_phone" validate:"required,e164"`
+	Content       string `json:"content" validate:"required,max=160"`
+	IsExpress     *bool  `json:"is_express" validate:"required,boolean"`
+}
