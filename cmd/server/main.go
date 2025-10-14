@@ -2,10 +2,12 @@ package main
 
 import (
 	"github.com/kadsin/sms-gateway/bootstrap"
+	"github.com/kadsin/sms-gateway/internal/container"
 )
 
 func main() {
-	bootstrap.SetupDatabase()
+	container.Init()
+	defer container.Close()
 
 	app := bootstrap.SetupFiberApp()
 

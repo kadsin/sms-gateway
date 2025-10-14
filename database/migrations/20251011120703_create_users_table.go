@@ -5,7 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/google/uuid"
-	"github.com/kadsin/sms-gateway/database"
+	"github.com/kadsin/sms-gateway/internal/container"
 	"github.com/pressly/goose/v3"
 	"gorm.io/gorm"
 )
@@ -23,9 +23,9 @@ func upCreateUsersTable(ctx context.Context, tx *sql.Tx) error {
 		gorm.Model
 	}
 
-	return database.Instance().Migrator().CreateTable(&User{})
+	return container.DB().Migrator().CreateTable(&User{})
 }
 
 func downCreateUsersTable(ctx context.Context, tx *sql.Tx) error {
-	return database.Instance().Migrator().DropTable("users")
+	return container.DB().Migrator().DropTable("users")
 }

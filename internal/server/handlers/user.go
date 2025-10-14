@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/kadsin/sms-gateway/database"
 	"github.com/kadsin/sms-gateway/database/models"
+	"github.com/kadsin/sms-gateway/internal/container"
 	"github.com/kadsin/sms-gateway/internal/server/requests"
 )
 
@@ -14,7 +14,7 @@ func ChangeUserBalance(c *fiber.Ctx) error {
 	}
 
 	var user models.User
-	tx := database.Instance().Where("email", data.Email).
+	tx := container.DB().Where("email", data.Email).
 		Assign("balance", data.Balance).
 		FirstOrCreate(&user)
 

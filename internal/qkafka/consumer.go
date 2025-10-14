@@ -6,17 +6,13 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func NewConsumer(c kafka.ReaderConfig) consumer {
-	if consumerMock != nil {
-		return consumerMock
-	}
-
+func NewConsumer(c kafka.ReaderConfig) Consumer {
 	return &KafkaConsumer{
 		reader: kafka.NewReader(c),
 	}
 }
 
-type consumer interface {
+type Consumer interface {
 	FetchMessage(ctx context.Context) (kafka.Message, error)
 	Commit(ctx context.Context, msgs ...kafka.Message) error
 	Close() error

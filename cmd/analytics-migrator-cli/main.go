@@ -12,12 +12,16 @@ import (
 	"github.com/kadsin/sms-gateway/analytics"
 	_ "github.com/kadsin/sms-gateway/analytics/migrations"
 	"github.com/kadsin/sms-gateway/config"
+	"github.com/kadsin/sms-gateway/internal/container"
 
 	"github.com/pressly/goose/v3"
 	"gorm.io/gorm/logger"
 )
 
 func main() {
+	container.Init()
+	defer container.Close()
+
 	command, arguments := os.Args[1], os.Args[2:]
 
 	db, err := goose.OpenDBWithDriver(config.Env.Analytics.Connection, analytics.DSN)
@@ -31,10 +35,7 @@ func main() {
 		}
 	}()
 
-	if _, err := analytics.Connect(); err != nil {
-		log.Printf("Error on connecting to analytics database: %+v\n", err)
-	}
-	analytics.Instance().Logger.LogMode(logger.Silent)
+	container.Analytics().Logger.LogMode(logger.Silent)
 
 	_, thisFile, _, _ := runtime.Caller(0)
 	migrationsPath := fmt.Sprintf("%v/../../analytics/migrations", filepath.Dir(thisFile))

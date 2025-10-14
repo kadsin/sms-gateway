@@ -1,10 +1,11 @@
-package qkafka_test
+package container_test
 
 import (
 	"context"
+	"os"
 	"testing"
 
-	"github.com/kadsin/sms-gateway/internal/qkafka"
+	"github.com/kadsin/sms-gateway/internal/container"
 	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/require"
 )
@@ -33,16 +34,25 @@ func (mp *ConsumerMock) Close() error {
 	return nil
 }
 
-func Test_MockQKafkaProducer(t *testing.T) {
-	qkafka.MockProducer(&ProducerMock{})
+func TestMain(m *testing.M) {
+	container.Init()
+	defer container.Close()
 
-	p := qkafka.Producer()
+	m.Run()
+
+	os.Exit(0)
+}
+
+func Test_Mock_KafkaProducer(t *testing.T) {
+	container.MockKafkaProducer(&ProducerMock{})
+
+	p := container.KafkaProducer()
 	require.IsType(t, &ProducerMock{}, p)
 }
 
-func Test_MockQKafkaConsumer(t *testing.T) {
-	qkafka.MockConsumer(&ConsumerMock{})
+func Test_Mock_KafkaConsumer(t *testing.T) {
+	container.MockKafkaConsumer(&ConsumerMock{})
 
-	p := qkafka.NewConsumer(kafka.ReaderConfig{})
+	p := container.KafkaConsumer("test")
 	require.IsType(t, &ConsumerMock{}, p)
 }

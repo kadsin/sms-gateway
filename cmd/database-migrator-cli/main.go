@@ -10,6 +10,7 @@ import (
 
 	"github.com/kadsin/sms-gateway/config"
 	"github.com/kadsin/sms-gateway/database"
+	"github.com/kadsin/sms-gateway/internal/container"
 
 	// It should load to execute all migration's init functions
 	_ "github.com/kadsin/sms-gateway/database/migrations"
@@ -19,6 +20,9 @@ import (
 )
 
 func main() {
+	container.Init()
+	defer container.Close()
+
 	command, arguments := os.Args[1], os.Args[2:]
 
 	db, err := goose.OpenDBWithDriver(config.Env.DB.Connection, database.DSN)
@@ -32,10 +36,7 @@ func main() {
 		}
 	}()
 
-	if _, err := database.Connect(); err != nil {
-		log.Printf("Error on connecting to database: %+v\n", err)
-	}
-	database.Instance().Logger.LogMode(logger.Silent)
+	container.DB().Logger.LogMode(logger.Silent)
 
 	_, thisFile, _, _ := runtime.Caller(0)
 	migrationsPath := fmt.Sprintf("%v/../../database/migrations", filepath.Dir(thisFile))

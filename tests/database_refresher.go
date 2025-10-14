@@ -10,6 +10,7 @@ import (
 
 	// It should load to execute all migration's init functions
 	_ "github.com/kadsin/sms-gateway/database/migrations"
+	"github.com/kadsin/sms-gateway/internal/container"
 
 	"github.com/kadsin/sms-gateway/config"
 	"github.com/kadsin/sms-gateway/database"
@@ -23,16 +24,15 @@ func RefreshDatabase() {
 	refreshDatabaseMux.Lock()
 	defer refreshDatabaseMux.Unlock()
 
-	database.Connect()
-	database.Instance().Logger = logger.Discard
+	container.DB().Logger = logger.Discard
 
-	tables, err := database.Instance().Migrator().GetTables()
+	tables, err := container.DB().Migrator().GetTables()
 	if err != nil {
 		log.Fatalf("Could not get tables list: %v", err)
 	}
 
 	for _, t := range tables {
-		err = database.Instance().Migrator().DropTable(t)
+		err = container.DB().Migrator().DropTable(t)
 		if err != nil {
 			log.Fatalf("Could not drop tables: %v", err)
 		}

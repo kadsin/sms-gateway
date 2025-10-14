@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/kadsin/sms-gateway/database"
 	"github.com/kadsin/sms-gateway/database/models"
+	"github.com/kadsin/sms-gateway/internal/container"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
@@ -24,7 +24,7 @@ func Test_UserBalance_BadData(t *testing.T) {
 	resp, _ := app.Test(req)
 	require.Equal(t, resp.StatusCode, fiber.ErrUnprocessableEntity.Code)
 
-	tx := database.Instance().First(&models.User{}, "email", "bad")
+	tx := container.DB().First(&models.User{}, "email", "bad")
 
 	require.ErrorIs(t, tx.Error, gorm.ErrRecordNotFound)
 }
@@ -50,7 +50,7 @@ func Test_UserBalance_NewUser(t *testing.T) {
 	require.Regexp(t, "^.{8}-.{4}-.{4}-.{4}-.{12}$", responseBody.Data.ID)
 
 	var user models.User
-	tx := database.Instance().First(&user, "email", "test@example.com")
+	tx := container.DB().First(&user, "email", "test@example.com")
 
 	require.NotErrorIs(t, tx.Error, gorm.ErrRecordNotFound)
 	require.NotEqual(t, user.ID.String(), "00000000-0000-0000-0000-000000000000")
@@ -58,7 +58,7 @@ func Test_UserBalance_NewUser(t *testing.T) {
 }
 
 func Test_UserBalance_UpdateOldUser(t *testing.T) {
-	database.Instance().Create(&models.User{
+	container.DB().Create(&models.User{
 		Email:   "test@example.com",
 		Balance: 1000.55,
 	})
@@ -74,7 +74,7 @@ func Test_UserBalance_UpdateOldUser(t *testing.T) {
 	app.Test(req)
 
 	var users []models.User
-	database.Instance().Model(&models.User{}).Where("email", "test@example.com").Scan(&users)
+	container.DB().Model(&models.User{}).Where("email", "test@example.com").Scan(&users)
 
 	require.Len(t, users, 1)
 	require.Equal(t, users[0].Balance, float32(200000))
