@@ -7,7 +7,7 @@ erDiagram
     message {
         string id
         string sender_client_id FK
-        string receiver_phone
+        string receiver_phone "e.g. +989123456789"
         text content
         float price
         boolean is_express
