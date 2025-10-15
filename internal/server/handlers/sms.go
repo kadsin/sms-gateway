@@ -6,6 +6,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	analytics_models "github.com/kadsin/sms-gateway/analytics/models"
 	"github.com/kadsin/sms-gateway/config"
 	"github.com/kadsin/sms-gateway/database/models"
 	"github.com/kadsin/sms-gateway/internal/container"
@@ -53,7 +54,7 @@ func SendSms(c *fiber.Ctx) error {
 	}
 
 	smsMessage.Price = smsPrice
-	smsMessage.SenderClientId = user.ID.String()
+	smsMessage.SenderClientId = user.ID
 
 	marshaledSms, err := dtos.Marshal(smsMessage)
 	if err != nil {
@@ -84,6 +85,8 @@ func SendSms(c *fiber.Ctx) error {
 		return err
 	}
 
+	analytics_models.LogPending(*smsMessage)
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message_id": smsMessage.Id,
 		"price":      smsMessage.Price,
@@ -97,11 +100,10 @@ func generateSmsMessage(data requests.SmsRequest) (*messages.Sms, error) {
 	}
 
 	sms := &messages.Sms{
-		Id:            id.String(),
+		Id:            id,
 		ReceiverPhone: data.ReceiverPhone,
 		Content:       data.Content,
 		IsExpress:     *data.IsExpress,
-		Status:        messages.SMS_PENDING,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}

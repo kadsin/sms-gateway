@@ -12,7 +12,6 @@ erDiagram
         float price
         boolean is_express
         string status "pending, sent, failed"
-		float[nullable] transfer_duration "The duration time when a message pend and sent in miliseconds"
 		timestamp created_at
 		timestamp updated_at
     }

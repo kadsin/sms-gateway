@@ -9,11 +9,13 @@ import (
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
+	analytics_models "github.com/kadsin/sms-gateway/analytics/models"
 	"github.com/kadsin/sms-gateway/config"
 	"github.com/kadsin/sms-gateway/internal/container"
 	"github.com/kadsin/sms-gateway/internal/dtos"
 	"github.com/kadsin/sms-gateway/internal/dtos/messages"
 	"github.com/kadsin/sms-gateway/tests/mocks"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -155,4 +157,34 @@ func Test_SendSms_SuccessfulResponse(t *testing.T) {
 
 	require.Equal(t, sms.Id, responseBody.Data.MessageId)
 	require.Equal(t, sms.Price, responseBody.Data.Price)
+}
+
+func Test_SendSms_SuccessfulStoreInClickHouse(t *testing.T) {
+	user := createUser()
+
+	jsonBody := fmt.Sprintf(`{
+			"client_email": "%s",
+			"receiver_phone": "+989123456789",
+			"content": "aqfdvsvsdvs",
+			"is_express": false
+		}`, user.Email)
+
+	req := httptest.NewRequest(fiber.MethodPost, "/api/sms", bytes.NewReader([]byte(jsonBody)))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, _ := app.Test(req)
+
+	type Payload struct {
+		Data struct {
+			MessageId string  `json:"message_id"`
+			Price     float32 `json:"price"`
+		} `json:"data"`
+	}
+
+	responseBody := unmarshalResponseBody[Payload](resp)
+
+	var sms analytics_models.SmsMessage
+	container.Analytics().Model(&analytics_models.SmsMessage{}).First(&sms, "id", responseBody.Data.MessageId)
+	assert.Equal(t, sms.Content, "aqfdvsvsdvs")
+	assert.Equal(t, sms.Status, analytics_models.SMS_PENDING)
 }
