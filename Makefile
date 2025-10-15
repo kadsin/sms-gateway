@@ -4,6 +4,10 @@ init:
 	@echo - Installing dependencies ...
 	go mod download
 
+queue-worker:
+	@go build -o ./build/queue-worker ./cmd/queue-worker
+	@./build/queue-worker
+
 server:
 	@go build -o ./build/server ./cmd/server
 	@./build/server
