@@ -1,6 +1,7 @@
 package analytics_models
 
 import (
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -32,16 +33,34 @@ type SmsMessage struct {
 	UpdatedAt      time.Time
 }
 
-func LogPending(m messages.Sms) {
-	container.Analytics().Create(&SmsMessage{
+func LogPending(m *messages.Sms) {
+	createSmsMessage(m, SMS_PENDING)
+}
+
+func LogFailure(m *messages.Sms) {
+	m.UpdatedAt = time.Now()
+	createSmsMessage(m, SMS_FAILED)
+}
+
+func LogSent(m *messages.Sms) {
+	m.UpdatedAt = time.Now()
+	createSmsMessage(m, SMS_SENT)
+}
+
+func createSmsMessage(m *messages.Sms, status SmsStatus) {
+	tx := container.Analytics().Create(&SmsMessage{
 		ID:             m.Id,
 		SenderClientID: m.SenderClientId,
 		ReceiverPhone:  m.ReceiverPhone,
 		Content:        m.Content,
 		Price:          m.Price,
 		IsExpress:      m.IsExpress,
-		Status:         SMS_PENDING,
+		Status:         status,
 		CreatedAt:      m.CreatedAt,
 		UpdatedAt:      m.UpdatedAt,
 	})
+
+	if tx.Error != nil {
+		log.Printf("Error on create sms message: %+v", tx.Error)
+	}
 }
