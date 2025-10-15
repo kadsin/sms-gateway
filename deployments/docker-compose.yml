@@ -18,10 +18,10 @@ services:
             timeout: 10s
             retries: 5
 
-    server:
+    sms-server:
         build:
             context: ..
-            dockerfile: ./deployments/Dockerfile
+            dockerfile: ./deployments/sms-server.Dockerfile
         environment:
             DB_CONNECTION: postgres
             DB_HOST: pg
@@ -36,8 +36,29 @@ services:
                 condition: service_started
             kafka:
                 condition: service_started
+            migrator:
+                condition: service_started
         ports:
             - 3030:3000
+
+    migrator:
+        build:
+            context: ..
+            dockerfile: ./deployments/migrator.Dockerfile
+        environment:
+            DB_CONNECTION: postgres
+            DB_HOST: pg
+            DB_PORT: 5432
+            ANALYTICS_DB_CONNECTION: clickhouse
+            ANALYTICS_DB_HOST: ch
+            ANALYTICS_DB_PORT: 9000
+        depends_on:
+            pg:
+                condition: service_healthy
+            ch:
+                condition: service_started
+            kafka:
+                condition: service_started
 
     ch-keeper:
         image: clickhouse/clickhouse-keeper:25.8
