@@ -6,7 +6,7 @@ init:
 
 queue-worker:
 	@go build -o ./build/queue-worker ./cmd/queue-worker
-	@./build/queue-worker
+	@./build/queue-worker $(topic)
 
 server:
 	@go build -o ./build/server ./cmd/server

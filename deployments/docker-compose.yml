@@ -95,7 +95,7 @@ services:
             KAFKA_BROKER_ID: 1
             KAFKA_KRAFT_MODE: 'true'
             KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,EXTERNAL://0.0.0.0:9094,CONTROLLER://0.0.0.0:9093
-            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://127.0.0.1:9094
             KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
             KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
             KAFKA_PROCESS_ROLES: broker,controller
@@ -128,11 +128,11 @@ services:
             done
 
             echo -e 'Creating kafka topics...'
-            ./kafka-topics.sh --create --topic $${TOPIC_REGULAR} --bootstrap-server $${KAFKA_SERVER} --partitions $${TOPIC_REGULAR_PARTITIONS} --replication-factor 1 --config retention.ms=3600;
-            ./kafka-topics.sh --create --topic $${TOPIC_EXPRESS} --bootstrap-server $${KAFKA_SERVER} --partitions $${TOPIC_EXPRESS_PARTITIONS} --replication-factor 1 --config retention.ms=3600;
+            ./kafka-topics.sh --create --topic $${TOPIC_REGULAR} --bootstrap-server $${KAFKA_SERVER} --partitions $${TOPIC_REGULAR_PARTITIONS} --replication-factor 1 --config retention.ms=3600000;
+            ./kafka-topics.sh --create --topic $${TOPIC_EXPRESS} --bootstrap-server $${KAFKA_SERVER} --partitions $${TOPIC_EXPRESS_PARTITIONS} --replication-factor 1 --config retention.ms=3600000;
 
             echo -e 'Creating internal topic: __consumer_offsets...'
-            ./kafka-topics.sh --create --topic __consumer_offsets --bootstrap-server $${KAFKA_SERVER} --partitions 10 --replication-factor 1;
+            ./kafka-topics.sh --create --topic __consumer_offsets --bootstrap-server $${KAFKA_SERVER} --partitions 25 --replication-factor 1;
 
             echo -e 'Successfully created the following topics:'
             ./kafka-topics.sh --bootstrap-server $${KAFKA_SERVER} --list
