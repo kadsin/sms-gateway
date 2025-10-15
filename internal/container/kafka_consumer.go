@@ -29,7 +29,7 @@ func KafkaConsumer(topic string) qkafka.Consumer {
 	return qkafka.NewConsumer(kafka.ReaderConfig{
 		Brokers: config.Env.Kafka.Brokers,
 		Topic:   topic,
-		GroupID: "consumergroup." + topic,
+		GroupID: config.Env.App.Environment + ".consumergroup." + topic,
 		Dialer:  dialer,
 	})
 }
