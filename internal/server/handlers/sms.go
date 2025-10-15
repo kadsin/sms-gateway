@@ -101,7 +101,6 @@ func generateSmsMessage(data requests.SmsRequest) (*messages.Sms, error) {
 		ReceiverPhone: data.ReceiverPhone,
 		Content:       data.Content,
 		IsExpress:     *data.IsExpress,
-		Status:        messages.SMS_PENDING,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
