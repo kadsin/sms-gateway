@@ -29,6 +29,7 @@ services:
             ANALYTICS_DB_CONNECTION: clickhouse
             ANALYTICS_DB_HOST: ch
             ANALYTICS_DB_PORT: 9000
+            KAFKA_BROKERS: "kafka:9092"
         depends_on:
             pg:
                 condition: service_healthy
@@ -52,6 +53,7 @@ services:
             ANALYTICS_DB_CONNECTION: clickhouse
             ANALYTICS_DB_HOST: ch
             ANALYTICS_DB_PORT: 9000
+            KAFKA_BROKERS: "kafka:9092"
         depends_on:
             pg:
                 condition: service_healthy
@@ -110,7 +112,7 @@ services:
             TOPIC_REGULAR: ${KAFKA_TOPIC_REGULAR}
             TOPIC_REGULAR_PARTITIONS: ${TOPIC_REGULAR_PARTITIONS:-2}
             TOPIC_EXPRESS: ${KAFKA_TOPIC_EXPRESS}
-            TOPIC_EXPRESS_PARTITIONS: ${TOPIC_EXPRESS_PARTITIONS:-4}
+            TOPIC_EXPRESS_PARTITIONS: ${TOPIC_EXPRESS_PARTITIONS:-20}
             KAFKA_SERVER: "kafka:9092"
         depends_on:
             - kafka

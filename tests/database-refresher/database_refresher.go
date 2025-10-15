@@ -1,4 +1,4 @@
-package tests
+package database_refresher
 
 import (
 	"context"
@@ -56,7 +56,7 @@ func MigrateDatabase() {
 	}()
 
 	_, thisFile, _, _ := runtime.Caller(0)
-	migrationsPath := fmt.Sprintf("%v/../database/migrations", filepath.Dir(thisFile))
+	migrationsPath := fmt.Sprintf("%v/../../database/migrations", filepath.Dir(thisFile))
 
 	if err := goose.RunContext(context.Background(), "up", db, migrationsPath); err != nil {
 		log.Printf("Error on goose up: %v", err)
