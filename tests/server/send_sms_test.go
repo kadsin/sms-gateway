@@ -155,7 +155,7 @@ func Test_SendSms_SuccessfulResponse(t *testing.T) {
 
 	responseBody := unmarshalResponseBody[Payload](resp)
 
-	require.Equal(t, sms.Id, responseBody.Data.MessageId)
+	require.Equal(t, sms.Id.String(), responseBody.Data.MessageId)
 	require.Equal(t, sms.Price, responseBody.Data.Price)
 }
 
