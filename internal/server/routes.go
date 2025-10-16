@@ -16,6 +16,8 @@ func SetupRoutes(app *fiber.App) {
 	api.Post("/user/balance", handlers.ChangeUserBalance)
 
 	api.Post("/sms", handlers.SendSms)
+
+	api.Get("/reports", handlers.Reports)
 }
 
 func setupSwagger(router fiber.Router) {
