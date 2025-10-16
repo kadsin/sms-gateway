@@ -9,11 +9,14 @@ import (
 	"time"
 
 	analytics_models "github.com/kadsin/sms-gateway/analytics/models"
+	"github.com/kadsin/sms-gateway/database/models"
 	"github.com/kadsin/sms-gateway/internal/container"
 	"github.com/kadsin/sms-gateway/internal/dtos"
 	"github.com/kadsin/sms-gateway/internal/dtos/messages"
 	"github.com/kadsin/sms-gateway/internal/qkafka"
 	"github.com/kadsin/sms-gateway/internal/sms"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 const WORKER_COUNT = 50
@@ -87,11 +90,33 @@ func initialSmsWorkersPool() chan messages.Sms {
 func sendSms(p sms.Provider, m messages.Sms) error {
 	if err := p.Send(m); err != nil {
 		analytics_models.LogFailure(&m)
+		if err := refundMessage(&m); err != nil {
+			return err
+		}
+
 		return err
 	}
 
 	analytics_models.LogSent(&m)
 	return nil
+}
+
+func refundMessage(m *messages.Sms) error {
+	tx := container.DB().Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+	defer tx.Rollback()
+
+	err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+		Model(&models.User{}).
+		Where("id", m.SenderClientId).
+		UpdateColumn("balance", gorm.Expr("balance + ?", m.Price)).Error
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit().Error
 }
 
 func catchKafkaError(err error) {

@@ -27,13 +27,8 @@ Note left of mb : It can publish on express<br>queue or regular
 s-->>c : Ok [requestId]
 mb->>w : message.pending<br>{maxRetry: int, retried: int}
 break Can't send sms
-    alt retried < maxRetry
-        w->w : Increase message.retried
-        w->mb : Redeliver message
-    else
-        w->pdb : Increase balance by message price
-        w->cdb : Log as failed
-    end
+    w->pdb : Increase balance by message price
+    w->cdb : Log as failed
 end
 w-->>r: Send via a provider
 w->cdb : Log as sent
