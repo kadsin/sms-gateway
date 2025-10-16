@@ -16,6 +16,7 @@ import (
 	"github.com/kadsin/sms-gateway/internal/container"
 	"github.com/kadsin/sms-gateway/internal/dtos"
 	"github.com/kadsin/sms-gateway/internal/dtos/messages"
+	userbalance "github.com/kadsin/sms-gateway/internal/user_balance"
 	"github.com/kadsin/sms-gateway/tests"
 	"github.com/kadsin/sms-gateway/tests/mocks"
 	"github.com/stretchr/testify/assert"
@@ -39,7 +40,11 @@ func Test_SendSms_BadData(t *testing.T) {
 }
 
 func Test_SendSms_CalculatePrice(t *testing.T) {
+	ctx := context.Background()
+
 	user := tests.CreateUser()
+	oldBalance, _ := userbalance.Get(ctx, user.ID)
+
 	resp, _ := postSms(user.ID, "abcd", false)
 	require.Equal(t, resp.StatusCode, fiber.StatusOK)
 
@@ -47,14 +52,13 @@ func Test_SendSms_CalculatePrice(t *testing.T) {
 	defer container.KafkaProducer().Close()
 
 	c.(*mocks.KafkaConsumerMock).Topic = config.Env.Kafka.Topics.Regular
-	m, _ := c.FetchMessage(context.Background())
+	m, _ := c.FetchMessage(ctx)
 
 	sms, _ := dtos.Unmarshal[messages.Sms](m.Value)
 	require.Equal(t, float32(40), sms.Price)
 
-	oldBalance := user.Balance
-	container.DB().Find(&user, "id", user.ID)
-	require.Equal(t, oldBalance-40, user.Balance)
+	newBalance, _ := userbalance.Get(ctx, user.ID)
+	require.Equal(t, oldBalance-40, newBalance)
 }
 
 func Test_SendSms_ValidateBalance(t *testing.T) {

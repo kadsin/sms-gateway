@@ -5,6 +5,7 @@ import (
 	"github.com/kadsin/sms-gateway/database/models"
 	"github.com/kadsin/sms-gateway/internal/container"
 	"github.com/kadsin/sms-gateway/internal/server/requests"
+	userbalance "github.com/kadsin/sms-gateway/internal/user_balance"
 )
 
 func ChangeUserBalance(c *fiber.Ctx) error {
@@ -13,14 +14,18 @@ func ChangeUserBalance(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, err.Error())
 	}
 
-	var user models.User
-	tx := container.DB().Where("email", data.Email).
-		Assign("balance", data.Balance).
-		FirstOrCreate(&user)
+	tx := container.DB().Begin()
 
-	if tx.Error != nil {
+	var user models.User
+	if container.DB().Where("email", data.Email).FirstOrCreate(&user).Error != nil {
 		return tx.Error
 	}
+
+	if _, err := userbalance.Change(c.Context(), user.ID, data.Balance); err != nil {
+		return err
+	}
+
+	tx.Commit()
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"id": user.ID,

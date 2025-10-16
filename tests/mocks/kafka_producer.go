@@ -31,3 +31,7 @@ func (p *KafkaProducerMock) Close() error {
 
 	return nil
 }
+
+func (p *KafkaProducerMock) Flush() {
+	p.Close()
+}

@@ -2,6 +2,7 @@ package server_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/http/httptest"
 	"testing"
@@ -9,6 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/kadsin/sms-gateway/database/models"
 	"github.com/kadsin/sms-gateway/internal/container"
+	userbalance "github.com/kadsin/sms-gateway/internal/user_balance"
 	"github.com/kadsin/sms-gateway/tests"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
@@ -56,11 +58,14 @@ func Test_UserBalance_NewUser(t *testing.T) {
 
 	require.NotErrorIs(t, tx.Error, gorm.ErrRecordNotFound)
 	require.NotEqual(t, user.ID.String(), "00000000-0000-0000-0000-000000000000")
-	require.Equal(t, user.Balance, float32(100000))
+
+	balance, _ := userbalance.Get(context.Background(), user.ID)
+	require.Equal(t, balance, float32(100000))
 }
 
 func Test_UserBalance_UpdateOldUser(t *testing.T) {
-	user := tests.CreateUser()
+	user := tests.CreateUser(1500)
+	userbalance.Get(context.Background(), user.ID)
 
 	jsonBody := fmt.Sprintf(`{
 		"email": "%s",
@@ -76,5 +81,7 @@ func Test_UserBalance_UpdateOldUser(t *testing.T) {
 	container.DB().Model(&models.User{}).Where("email", user.Email).Scan(&users)
 
 	require.Len(t, users, 1)
-	require.Equal(t, users[0].Balance, float32(200000))
+
+	balance, _ := userbalance.Get(context.Background(), user.ID)
+	require.Equal(t, float32(201500), balance)
 }

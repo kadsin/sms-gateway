@@ -8,6 +8,8 @@ func Init() {
 	initAnalytics()
 
 	initKafkaProducer()
+
+	initRedis()
 }
 
 func Close() {

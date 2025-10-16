@@ -9,6 +9,8 @@ x-app-environments: &app-environments
     ANALYTICS_DB_HOST: ch
     ANALYTICS_DB_PORT: 9000
     KAFKA_BROKERS: "kafka:9092"
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
 
 services:
     sms-server:
@@ -25,9 +27,29 @@ services:
                 condition: service_started
             migrator:
                 condition: service_started
+            user-balance-worker:
+                condition: service_started
+            redis:
+                condition: service_healthy
         ports:
             - 3030:3000
 
+    user-balance-worker:
+        build:
+            context: ..
+            dockerfile: ./deployments/user-balance-worker.Dockerfile
+        environment:
+            <<: *app-environments
+            CONSUMER_COUNT: 25
+        depends_on:
+            pg:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+            kafka:
+                condition: service_started
+            migrator:
+                condition: service_started
 
     queue-worker-regular: &queue-worker
         build:
@@ -44,6 +66,8 @@ services:
             kafka:
                 condition: service_started
             migrator:
+                condition: service_started
+            user-balance-worker:
                 condition: service_started
 
     queue-worker-express-1:
@@ -93,6 +117,18 @@ services:
             test: ['CMD-SHELL', 'pg_isready -d postgres']
             interval: 30s
             timeout: 10s
+            retries: 5
+
+    redis:
+        image: redis:8-alpine
+        ports:
+            - '6380:6379'
+        volumes:
+            - redis_data:/data
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 10s
+            timeout: 5s
             retries: 5
 
     ch-keeper:
@@ -146,6 +182,8 @@ services:
             TOPIC_REGULAR_PARTITIONS: ${TOPIC_REGULAR_PARTITIONS:-2}
             TOPIC_EXPRESS: ${KAFKA_TOPIC_EXPRESS}
             TOPIC_EXPRESS_PARTITIONS: ${TOPIC_EXPRESS_PARTITIONS:-20}
+            TOPIC_BALANCE: ${KAFKA_TOPIC_BALANCE}
+            TOPIC_BALANCE_PARTITIONS: ${TOPIC_BALANCE_PARTITIONS:-50}
             KAFKA_SERVER: "kafka:9092"
         depends_on:
             - kafka
@@ -163,6 +201,7 @@ services:
             echo -e 'Creating kafka topics...'
             ./kafka-topics.sh --create --topic $${TOPIC_REGULAR} --bootstrap-server $${KAFKA_SERVER} --partitions $${TOPIC_REGULAR_PARTITIONS} --replication-factor 1 --config retention.ms=3600000;
             ./kafka-topics.sh --create --topic $${TOPIC_EXPRESS} --bootstrap-server $${KAFKA_SERVER} --partitions $${TOPIC_EXPRESS_PARTITIONS} --replication-factor 1 --config retention.ms=3600000;
+            ./kafka-topics.sh --create --topic $${TOPIC_BALANCE} --bootstrap-server $${KAFKA_SERVER} --partitions $${TOPIC_BALANCE_PARTITIONS} --replication-factor 1 --config retention.ms=3600000;
 
             echo -e 'Creating internal topic: __consumer_offsets...'
             ./kafka-topics.sh --create --topic __consumer_offsets --bootstrap-server $${KAFKA_SERVER} --partitions 25 --replication-factor 1;
@@ -177,4 +216,6 @@ volumes:
     postgres_data:
         driver: local
     kafka_data:
+        driver: local
+    redis_data:
         driver: local

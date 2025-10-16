@@ -8,6 +8,10 @@ queue-worker:
 	@go build -o ./build/queue-worker ./cmd/queue-worker
 	@./build/queue-worker $(topic)
 
+balance-worker:
+	@go build -o ./build/balance-worker ./cmd/balance-worker
+	@./build/balance-worker $(consumers)
+
 server:
 	@go build -o ./build/server ./cmd/server
 	@./build/server

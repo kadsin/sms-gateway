@@ -48,6 +48,8 @@ func TestMain(m *testing.M) {
 	container.Analytics().Begin()
 	defer container.Analytics().Rollback()
 
+	container.Redis().FlushAll(context.Background())
+
 	code := m.Run()
 
 	os.Exit(code)

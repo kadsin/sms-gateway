@@ -4,19 +4,18 @@ import (
 	"context"
 	"errors"
 	"log"
+	"math"
 	"os"
 	"strings"
 	"time"
 
 	analytics_models "github.com/kadsin/sms-gateway/analytics/models"
-	"github.com/kadsin/sms-gateway/database/models"
 	"github.com/kadsin/sms-gateway/internal/container"
 	"github.com/kadsin/sms-gateway/internal/dtos"
 	"github.com/kadsin/sms-gateway/internal/dtos/messages"
 	"github.com/kadsin/sms-gateway/internal/qkafka"
 	"github.com/kadsin/sms-gateway/internal/sms"
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
+	userbalance "github.com/kadsin/sms-gateway/internal/user_balance"
 )
 
 const WORKER_COUNT = 50
@@ -39,7 +38,7 @@ func main() {
 
 func processMessages(ctx context.Context, consumer qkafka.Consumer) error {
 	log.Printf("Initializing workers pool with count %v ...", WORKER_COUNT)
-	msgChan := initialSmsWorkersPool()
+	msgChan := initialSmsWorkersPool(ctx)
 
 	for {
 		m, err := consumer.FetchMessage(ctx)
@@ -67,7 +66,7 @@ func processMessages(ctx context.Context, consumer qkafka.Consumer) error {
 	}
 }
 
-func initialSmsWorkersPool() chan messages.Sms {
+func initialSmsWorkersPool(ctx context.Context) chan messages.Sms {
 	provider := container.SmsProvider()
 
 	msgChan := make(chan messages.Sms, 1000)
@@ -75,7 +74,7 @@ func initialSmsWorkersPool() chan messages.Sms {
 	for i := range WORKER_COUNT {
 		go func(id int) {
 			for m := range msgChan {
-				if err := sendSms(provider, m); err != nil {
+				if err := sendSms(ctx, provider, m); err != nil {
 					log.Printf("worker id: %v\nerror:%+v", id, err)
 				} else {
 					log.Printf("worker id: %v\nsms sent\nid: %s\n", id, m.Id)
@@ -87,10 +86,12 @@ func initialSmsWorkersPool() chan messages.Sms {
 	return msgChan
 }
 
-func sendSms(p sms.Provider, m messages.Sms) error {
+func sendSms(ctx context.Context, p sms.Provider, m messages.Sms) error {
 	if err := p.Send(m); err != nil {
 		analytics_models.LogFailure(&m)
-		if err := refundMessage(&m); err != nil {
+
+		amount := math.Abs(float64(m.Price))
+		if _, err := userbalance.Change(ctx, m.SenderClientId, float32(amount)); err != nil {
 			return err
 		}
 
@@ -99,24 +100,6 @@ func sendSms(p sms.Provider, m messages.Sms) error {
 
 	analytics_models.LogSent(&m)
 	return nil
-}
-
-func refundMessage(m *messages.Sms) error {
-	tx := container.DB().Begin()
-	if tx.Error != nil {
-		return tx.Error
-	}
-	defer tx.Rollback()
-
-	err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-		Model(&models.User{}).
-		Where("id", m.SenderClientId).
-		UpdateColumn("balance", gorm.Expr("balance + ?", m.Price)).Error
-	if err != nil {
-		return err
-	}
-
-	return tx.Commit().Error
 }
 
 func catchKafkaError(err error) {
