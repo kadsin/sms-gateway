@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	analytics_models "github.com/kadsin/sms-gateway/analytics/models"
 	"github.com/kadsin/sms-gateway/config"
 	"github.com/kadsin/sms-gateway/internal/container"
@@ -22,20 +24,7 @@ import (
 
 func Test_SendSms_BadData(t *testing.T) {
 	user := tests.CreateUser()
-
-	smsContent := strings.Repeat("a", 161)
-
-	jsonBody := fmt.Sprintf(`{
-			"client_id": "%s",
-			"receiver_phone": "091",
-			"content": "%s",
-			"is_express": 10
-		}`, user.ID, smsContent)
-
-	req := httptest.NewRequest(fiber.MethodPost, "/api/sms", bytes.NewReader([]byte(jsonBody)))
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, _ := app.Test(req)
+	resp, _ := postSms(user.ID, strings.Repeat("a", 161), 10)
 	require.Equal(t, resp.StatusCode, fiber.ErrUnprocessableEntity.Code)
 
 	c := container.KafkaConsumer("")
@@ -51,18 +40,7 @@ func Test_SendSms_BadData(t *testing.T) {
 
 func Test_SendSms_CalculatePrice(t *testing.T) {
 	user := tests.CreateUser()
-
-	jsonBody := fmt.Sprintf(`{
-			"client_id": "%s",
-			"receiver_phone": "+989123456789",
-			"content": "abcd",
-			"is_express": false
-		}`, user.ID)
-
-	req := httptest.NewRequest(fiber.MethodPost, "/api/sms", bytes.NewReader([]byte(jsonBody)))
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, _ := app.Test(req)
+	resp, _ := postSms(user.ID, "abcd", false)
 	require.Equal(t, resp.StatusCode, fiber.StatusOK)
 
 	c := container.KafkaConsumer("")
@@ -81,18 +59,7 @@ func Test_SendSms_CalculatePrice(t *testing.T) {
 
 func Test_SendSms_ValidateBalance(t *testing.T) {
 	user := tests.CreateUser(10)
-
-	jsonBody := fmt.Sprintf(`{
-			"client_id": "%s",
-			"receiver_phone": "+989123456789",
-			"content": "abcdefg",
-			"is_express": false
-		}`, user.ID)
-
-	req := httptest.NewRequest(fiber.MethodPost, "/api/sms", bytes.NewReader([]byte(jsonBody)))
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, _ := app.Test(req)
+	resp, _ := postSms(user.ID, "abcdefg", false)
 	require.Equal(t, resp.StatusCode, fiber.ErrPaymentRequired.Code)
 
 	c := container.KafkaConsumer("")
@@ -104,18 +71,7 @@ func Test_SendSms_ValidateBalance(t *testing.T) {
 
 func Test_SendSms_Express(t *testing.T) {
 	user := tests.CreateUser()
-
-	jsonBody := fmt.Sprintf(`{
-			"client_id": "%s",
-			"receiver_phone": "+989123456789",
-			"content": "abcdefg",
-			"is_express": true
-		}`, user.ID)
-
-	req := httptest.NewRequest(fiber.MethodPost, "/api/sms", bytes.NewReader([]byte(jsonBody)))
-	req.Header.Set("Content-Type", "application/json")
-
-	app.Test(req)
+	postSms(user.ID, "abcdefg", true)
 
 	c := container.KafkaConsumer("")
 	defer container.KafkaProducer().Close()
@@ -127,18 +83,7 @@ func Test_SendSms_Express(t *testing.T) {
 
 func Test_SendSms_SuccessfulResponse(t *testing.T) {
 	user := tests.CreateUser()
-
-	jsonBody := fmt.Sprintf(`{
-			"client_id": "%s",
-			"receiver_phone": "+989123456789",
-			"content": "aqfdvsvsdvs",
-			"is_express": false
-		}`, user.ID)
-
-	req := httptest.NewRequest(fiber.MethodPost, "/api/sms", bytes.NewReader([]byte(jsonBody)))
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, _ := app.Test(req)
+	resp, _ := postSms(user.ID, "aqfdvsvsdvs", false)
 
 	c := container.KafkaConsumer("")
 	defer container.KafkaProducer().Close()
@@ -162,18 +107,7 @@ func Test_SendSms_SuccessfulResponse(t *testing.T) {
 
 func Test_SendSms_SuccessfulStoreInClickHouse(t *testing.T) {
 	user := tests.CreateUser()
-
-	jsonBody := fmt.Sprintf(`{
-			"client_id": "%s",
-			"receiver_phone": "+989123456789",
-			"content": "aqfdvsvsdvs",
-			"is_express": false
-		}`, user.ID)
-
-	req := httptest.NewRequest(fiber.MethodPost, "/api/sms", bytes.NewReader([]byte(jsonBody)))
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, _ := app.Test(req)
+	resp, _ := postSms(user.ID, "aqfdvsvsdvs", false)
 
 	type Payload struct {
 		Data struct {
@@ -188,4 +122,18 @@ func Test_SendSms_SuccessfulStoreInClickHouse(t *testing.T) {
 	container.Analytics().Model(&analytics_models.SmsMessage{}).First(&sms, "id", responseBody.Data.MessageId)
 	assert.Equal(t, sms.Content, "aqfdvsvsdvs")
 	assert.Equal(t, sms.Status, analytics_models.SMS_PENDING)
+}
+
+func postSms(userId uuid.UUID, content string, isExpress any) (*http.Response, error) {
+	jsonBody := fmt.Sprintf(`{
+		"receiver_phone": "+989123456789",
+		"content": "%s",
+		"is_express": %v
+	}`, content, isExpress)
+
+	req := httptest.NewRequest(fiber.MethodPost, "/api/sms", bytes.NewReader([]byte(jsonBody)))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-CLIENT-ID", userId.String())
+
+	return app.Test(req)
 }
