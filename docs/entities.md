@@ -2,6 +2,7 @@
 erDiagram
     client {
         string[uuid7] id PK
+        string email
         float balance
     }
     message {
