@@ -12,6 +12,7 @@ import (
 	"github.com/kadsin/sms-gateway/internal/container"
 	"github.com/kadsin/sms-gateway/internal/dtos"
 	"github.com/kadsin/sms-gateway/internal/dtos/messages"
+	"github.com/kadsin/sms-gateway/internal/qkafka"
 	"github.com/kadsin/sms-gateway/internal/sms"
 )
 
@@ -26,16 +27,16 @@ func main() {
 	}
 	topic := strings.Trim(os.Args[1], " \t\n\r\"'")
 
-	processMessages(context.TODO(), topic)
-}
-
-func processMessages(ctx context.Context, topic string) error {
-	log.Printf("Initializing workers pool with count %v ...", WORKER_COUNT)
-	msgChan := initialSmsWorkersPool()
-
-	log.Printf("Start listening on topic `%s` ...", topic)
 	consumer := container.KafkaConsumer(topic)
 	defer consumer.Close()
+	log.Printf("Start listening on topic `%s` with group id `%s` ...", consumer.Config().Topic, consumer.Config().GroupID)
+
+	processMessages(context.TODO(), consumer)
+}
+
+func processMessages(ctx context.Context, consumer qkafka.Consumer) error {
+	log.Printf("Initializing workers pool with count %v ...", WORKER_COUNT)
+	msgChan := initialSmsWorkersPool()
 
 	for {
 		m, err := consumer.FetchMessage(ctx)

@@ -14,6 +14,10 @@ type KafkaConsumerMock struct {
 	counter int64
 }
 
+func (c *KafkaConsumerMock) Config() kafka.ReaderConfig {
+	return kafka.ReaderConfig{}
+}
+
 func (c *KafkaConsumerMock) FetchMessage(ctx context.Context) (kafka.Message, error) {
 	kafkaTopicsMockMux.Lock()
 	defer kafkaTopicsMockMux.Unlock()
