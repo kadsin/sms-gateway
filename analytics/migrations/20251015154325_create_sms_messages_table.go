@@ -3,11 +3,7 @@ package migrations
 import (
 	"context"
 	"database/sql"
-	"time"
 
-	"github.com/google/uuid"
-	analytics_models "github.com/kadsin/sms-gateway/analytics/models"
-	"github.com/kadsin/sms-gateway/internal/container"
 	"github.com/pressly/goose/v3"
 )
 
@@ -16,21 +12,28 @@ func init() {
 }
 
 func upCreateSmsMessagesTable(ctx context.Context, tx *sql.Tx) error {
-	type SmsMessage struct {
-		ID             uuid.UUID `gorm:"primaryKey"`
-		SenderClientID uuid.UUID
-		ReceiverPhone  string
-		Content        string
-		Price          float32
-		IsExpress      bool
-		Status         analytics_models.SmsStatus
-		CreatedAt      time.Time
-		UpdatedAt      time.Time
-	}
+	ddl := `
+	CREATE TABLE IF NOT EXISTS sms_messages
+	(
+		id UUID,
+		sender_client_id UUID,
+		receiver_phone String,
+		content String,
+		price Float32,
+		is_express UInt8,
+		status String,
+		created_at DateTime,
+		updated_at DateTime
+	) ENGINE = MergeTree()
+	PARTITION BY toYYYYMMDD(created_at)
+	ORDER BY (sender_client_id, id)
+	`
 
-	return container.Analytics().Migrator().CreateTable(&SmsMessage{})
+	_, err := tx.ExecContext(ctx, ddl)
+	return err
 }
 
 func downCreateSmsMessagesTable(ctx context.Context, tx *sql.Tx) error {
-	return container.Analytics().Migrator().DropTable("sms_messages")
+	_, err := tx.ExecContext(ctx, `DROP TABLE IF EXISTS sms_messages`)
+	return err
 }
