@@ -1,35 +1,21 @@
+version: '3.4'
 name: sms-gateway
 
-services:
-    pg:
-        image: postgres:18-alpine
-        environment:
-            POSTGRES_USER: ${DB_USERNAME}
-            POSTGRES_PASSWORD: ${DB_PASSWORD}
-            PGDATA: /data/postgres
-            POSTGRES_DB: ${DB_NAME}
-        volumes:
-            - postgres_data:/data/postgres
-        ports:
-            - '5332:5432'
-        healthcheck:
-            test: ['CMD-SHELL', 'pg_isready -d postgres']
-            interval: 30s
-            timeout: 10s
-            retries: 5
+x-app-environments: &app-environments
+    DB_CONNECTION: postgres
+    DB_HOST: pg
+    DB_PORT: 5432
+    ANALYTICS_DB_CONNECTION: clickhouse
+    ANALYTICS_DB_HOST: ch
+    ANALYTICS_DB_PORT: 9000
+    KAFKA_BROKERS: "kafka:9092"
 
+services:
     sms-server:
         build:
             context: ..
             dockerfile: ./deployments/sms-server.Dockerfile
-        environment:
-            DB_CONNECTION: postgres
-            DB_HOST: pg
-            DB_PORT: 5432
-            ANALYTICS_DB_CONNECTION: clickhouse
-            ANALYTICS_DB_HOST: ch
-            ANALYTICS_DB_PORT: 9000
-            KAFKA_BROKERS: "kafka:9092"
+        environment: *app-environments
         depends_on:
             pg:
                 condition: service_healthy
@@ -41,6 +27,36 @@ services:
                 condition: service_started
         ports:
             - 3030:3000
+
+
+    queue-worker-regular: &queue-worker
+        build:
+            context: ..
+            dockerfile: ./deployments/queue-worker.Dockerfile
+        environment:
+            <<: *app-environments
+            TOPIC: ${KAFKA_TOPIC_REGULAR}
+        depends_on:
+            pg:
+                condition: service_healthy
+            ch:
+                condition: service_started
+            kafka:
+                condition: service_started
+            migrator:
+                condition: service_started
+
+    queue-worker-express-1:
+        <<: *queue-worker
+        environment:
+            <<: *app-environments
+            TOPIC: ${KAFKA_TOPIC_EXPRESS}
+
+    queue-worker-express-2:
+        <<: *queue-worker
+        environment:
+            <<: *app-environments
+            TOPIC: ${KAFKA_TOPIC_EXPRESS}
 
     migrator:
         build:
@@ -61,6 +77,23 @@ services:
                 condition: service_started
             kafka:
                 condition: service_started
+
+    pg:
+        image: postgres:18-alpine
+        environment:
+            POSTGRES_USER: ${DB_USERNAME}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+            PGDATA: /data/postgres
+            POSTGRES_DB: ${DB_NAME}
+        volumes:
+            - postgres_data:/data/postgres
+        ports:
+            - '5332:5432'
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -d postgres']
+            interval: 30s
+            timeout: 10s
+            retries: 5
 
     ch-keeper:
         image: clickhouse/clickhouse-keeper:25.8
