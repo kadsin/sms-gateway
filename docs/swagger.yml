@@ -93,6 +93,37 @@ paths:
                 '402':
                     description: Payment requiered
 
+    /api/reports:
+        get:
+            summary: Get reports
+            parameters:
+                - $ref: '#/components/parameters/Auth'
+            responses:
+                '200':
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data:
+                                        type: object
+                                        properties:
+                                            balance:
+                                                type: number
+                                            pending_count:
+                                                type: number
+                                            failure_count:
+                                                type: number
+                                            sent_count:
+                                                type: number
+                                        required:
+                                            - balance
+                                            - pending_count
+                                            - failure_count
+                                            - sent_count
+                '400':
+                    $ref: '#/components/responses/ValidationFailed'
+
 components:
     parameters:
         Auth:
