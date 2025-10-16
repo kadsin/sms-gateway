@@ -14,6 +14,16 @@ func CacheKey(userID uuid.UUID) string {
 	return fmt.Sprintf("user_balance:%s", userID)
 }
 
+func syncRedisByPostgre(ctx context.Context, userId uuid.UUID) (float32, error) {
+	balance, err := getRealUserBalance(ctx, userId)
+	if err != nil {
+		return 0, err
+	}
+
+	container.Redis().Set(ctx, CacheKey(userId), balance, 0)
+	return balance, nil
+}
+
 func getRealUserBalance(ctx context.Context, userId uuid.UUID) (float32, error) {
 	tx := container.DB().Begin()
 	if tx.Error != nil {

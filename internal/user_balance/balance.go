@@ -13,12 +13,11 @@ func Get(ctx context.Context, userId uuid.UUID) (float32, error) {
 
 	tx := container.Redis().Get(ctx, rKey)
 	if tx.Err() == redis.Nil {
-		balance, err := getRealUserBalance(ctx, userId)
+		balance, err := syncRedisByPostgre(ctx, userId)
 		if err != nil {
 			return 0, err
 		}
 
-		container.Redis().Set(ctx, rKey, balance, 0)
 		return balance, nil
 	}
 
