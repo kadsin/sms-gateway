@@ -85,7 +85,7 @@ func SendSms(c *fiber.Ctx) error {
 		return err
 	}
 
-	analytics_models.LogPending(*smsMessage)
+	analytics_models.LogPending(smsMessage)
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message_id": smsMessage.Id,

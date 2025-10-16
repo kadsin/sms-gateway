@@ -6,8 +6,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN go build -o ./build/server ./cmd/server
 
-ENTRYPOINT ./build/server
+RUN go build -o ./build/queue-worker ./cmd/queue-worker
 
-EXPOSE 3000
+CMD ./build/queue-worker $TOPIC

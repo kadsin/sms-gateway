@@ -56,7 +56,7 @@ func TestMain(m *testing.M) {
 func mockEssentials() {
 	container.MockKafkaProducer(&mocks.KafkaProducerMock{})
 
-	container.MockKafkaConsumer(&mocks.KafkaConsumerMock{})
+	container.MockKafkaConsumer(&mocks.KafkaConsumerMock{Topic: config.Env.Kafka.Topics.Regular})
 }
 
 func RefreshDatabase() {
