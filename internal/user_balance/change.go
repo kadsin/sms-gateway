@@ -4,7 +4,11 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/kadsin/sms-gateway/config"
 	"github.com/kadsin/sms-gateway/internal/container"
+	"github.com/kadsin/sms-gateway/internal/dtos"
+	"github.com/kadsin/sms-gateway/internal/dtos/messages"
+	"github.com/segmentio/kafka-go"
 )
 
 func Change(ctx context.Context, userID uuid.UUID, delta float32) (float32, error) {
@@ -26,5 +30,22 @@ func Change(ctx context.Context, userID uuid.UUID, delta float32) (float32, erro
 		return 0, err
 	}
 
+	publishOnKafka(ctx, messages.UserBalance{
+		ClientId: userID,
+		Amount:   delta,
+	})
+
 	return float32(newBalance), nil
+}
+
+func publishOnKafka(ctx context.Context, ub messages.UserBalance) error {
+	b, err := dtos.Marshal(ub)
+	if err != nil {
+		return err
+	}
+
+	return container.KafkaProducer().SendMessage(ctx, kafka.Message{
+		Topic: config.Env.Kafka.Topics.Balance,
+		Value: b,
+	})
 }
