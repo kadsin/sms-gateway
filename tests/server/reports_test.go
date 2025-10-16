@@ -2,7 +2,6 @@ package server_test
 
 import (
 	"bytes"
-	"fmt"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -23,10 +22,9 @@ func Test_Reports_Successful(t *testing.T) {
 	user2 := tests.CreateUser()
 	generateBatchSms(user2, 50, 10, 10)
 
-	jsonBody := fmt.Sprintf(`{"client_id": "%s"}`, user1.ID)
-
-	req := httptest.NewRequest(fiber.MethodGet, "/api/reports", bytes.NewReader([]byte(jsonBody)))
+	req := httptest.NewRequest(fiber.MethodGet, "/api/reports", bytes.NewReader([]byte{}))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-CLIENT-ID", user1.ID.String())
 
 	resp, _ := app.Test(req)
 	require.Equal(t, resp.StatusCode, fiber.StatusOK)
