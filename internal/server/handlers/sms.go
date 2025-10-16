@@ -8,14 +8,12 @@ import (
 	"github.com/google/uuid"
 	analytics_models "github.com/kadsin/sms-gateway/analytics/models"
 	"github.com/kadsin/sms-gateway/config"
-	"github.com/kadsin/sms-gateway/database/models"
 	"github.com/kadsin/sms-gateway/internal/container"
 	"github.com/kadsin/sms-gateway/internal/dtos"
 	"github.com/kadsin/sms-gateway/internal/dtos/messages"
 	"github.com/kadsin/sms-gateway/internal/server/requests"
+	userbalance "github.com/kadsin/sms-gateway/internal/user_balance"
 	"github.com/segmentio/kafka-go"
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 const SmsPricePerChar float32 = 10 // Toman
@@ -26,25 +24,26 @@ func SendSms(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, err.Error())
 	}
 
-	tx := container.DB().Begin()
-	if tx.Error != nil {
-		return tx.Error
-	}
-	defer tx.Rollback()
-
-	var user models.User
-	err = tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-		Where("id", getClientId(c)).
-		First(&user).Error
+	userId, err := uuid.Parse(getClientId(c))
 	if err != nil {
-		return fiber.NewError(fiber.StatusUnprocessableEntity, "user not found")
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid user id")
+	}
+
+	userMux := userbalance.UserLock(userId)
+	userMux.Lock()
+	defer userMux.Unlock()
+
+	userBalance, err := userbalance.Get(c.Context(), userId)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Error on getting balance")
 	}
 
 	smsPrice := float32(len(data.Content)) * SmsPricePerChar
-	if user.Balance < smsPrice {
+
+	if userBalance < smsPrice {
 		return fiber.NewError(
 			fiber.StatusPaymentRequired,
-			fmt.Sprintf("balance is not enough. price: %v, balance: %v", smsPrice, user.Balance),
+			fmt.Sprintf("balance is not enough. price: %v, balance: %v", smsPrice, userBalance),
 		)
 	}
 
@@ -54,7 +53,7 @@ func SendSms(c *fiber.Ctx) error {
 	}
 
 	smsMessage.Price = smsPrice
-	smsMessage.SenderClientId = user.ID
+	smsMessage.SenderClientId = userId
 
 	marshaledSms, err := dtos.Marshal(smsMessage)
 	if err != nil {
@@ -66,22 +65,17 @@ func SendSms(c *fiber.Ctx) error {
 		kafkaTopic = config.Env.Kafka.Topics.Express
 	}
 
+	if _, err := userbalance.Change(c.Context(), userId, -smsPrice); err != nil {
+		return err
+	}
+
 	err = container.KafkaProducer().SendMessage(c.Context(), kafka.Message{
 		Topic: kafkaTopic,
 		Value: marshaledSms,
 	})
 	if err != nil {
-		return err
-	}
-
-	err = tx.Model(&models.User{}).
-		Where("id", user.ID).
-		UpdateColumn("balance", gorm.Expr("balance - ?", smsPrice)).Error
-	if err != nil {
-		return err
-	}
-
-	if err := tx.Commit().Error; err != nil {
+		// Refund
+		userbalance.Change(c.Context(), userId, smsPrice)
 		return err
 	}
 
