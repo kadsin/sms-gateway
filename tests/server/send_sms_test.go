@@ -14,13 +14,14 @@ import (
 	"github.com/kadsin/sms-gateway/internal/container"
 	"github.com/kadsin/sms-gateway/internal/dtos"
 	"github.com/kadsin/sms-gateway/internal/dtos/messages"
+	"github.com/kadsin/sms-gateway/tests"
 	"github.com/kadsin/sms-gateway/tests/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_SendSms_BadData(t *testing.T) {
-	user := createUser()
+	user := tests.CreateUser()
 
 	smsContent := strings.Repeat("a", 161)
 
@@ -49,7 +50,7 @@ func Test_SendSms_BadData(t *testing.T) {
 }
 
 func Test_SendSms_CalculatePrice(t *testing.T) {
-	user := createUser()
+	user := tests.CreateUser()
 
 	jsonBody := fmt.Sprintf(`{
 			"client_email": "%s",
@@ -79,7 +80,7 @@ func Test_SendSms_CalculatePrice(t *testing.T) {
 }
 
 func Test_SendSms_ValidateBalance(t *testing.T) {
-	user := createUser(10)
+	user := tests.CreateUser(10)
 
 	jsonBody := fmt.Sprintf(`{
 			"client_email": "%s",
@@ -102,7 +103,7 @@ func Test_SendSms_ValidateBalance(t *testing.T) {
 }
 
 func Test_SendSms_Express(t *testing.T) {
-	user := createUser()
+	user := tests.CreateUser()
 
 	jsonBody := fmt.Sprintf(`{
 			"client_email": "%s",
@@ -125,7 +126,7 @@ func Test_SendSms_Express(t *testing.T) {
 }
 
 func Test_SendSms_SuccessfulResponse(t *testing.T) {
-	user := createUser()
+	user := tests.CreateUser()
 
 	jsonBody := fmt.Sprintf(`{
 			"client_email": "%s",
@@ -160,7 +161,7 @@ func Test_SendSms_SuccessfulResponse(t *testing.T) {
 }
 
 func Test_SendSms_SuccessfulStoreInClickHouse(t *testing.T) {
-	user := createUser()
+	user := tests.CreateUser()
 
 	jsonBody := fmt.Sprintf(`{
 			"client_email": "%s",

@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/kadsin/sms-gateway/database/models"
 	"github.com/kadsin/sms-gateway/internal/container"
+	"github.com/kadsin/sms-gateway/tests"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
@@ -59,7 +60,7 @@ func Test_UserBalance_NewUser(t *testing.T) {
 }
 
 func Test_UserBalance_UpdateOldUser(t *testing.T) {
-	user := createUser()
+	user := tests.CreateUser()
 
 	jsonBody := fmt.Sprintf(`{
 		"email": "%s",
