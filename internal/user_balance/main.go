@@ -3,12 +3,30 @@ package userbalance
 import (
 	"context"
 	"fmt"
+	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/kadsin/sms-gateway/database/models"
 	"github.com/kadsin/sms-gateway/internal/container"
 	"gorm.io/gorm/clause"
 )
+
+var group = &lockGroup{locks: make(map[uuid.UUID]*userLock)}
+
+func init() {
+	go func() {
+		for {
+			time.Sleep(cleanupInterval)
+
+			group.cleanup()
+		}
+	}()
+}
+
+func UserLock(id uuid.UUID) *sync.Mutex {
+	return group.GetOrCreate(id)
+}
 
 func CacheKey(userID uuid.UUID) string {
 	return fmt.Sprintf("user_balance:%s", userID)
