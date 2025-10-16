@@ -18,6 +18,18 @@ Run the server:
 make server
 ```
 
+Run the queue worker:
+
+```bash
+make queue-worker topic=express.sms.pending
+```
+
+Run the balance worker:
+
+```bash
+make balance-worker consumers=25
+```
+
 ---
 
 ## Testing
