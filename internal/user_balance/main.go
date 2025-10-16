@@ -38,7 +38,7 @@ func syncRedisByPostgre(ctx context.Context, userId uuid.UUID) (float32, error) 
 		return 0, err
 	}
 
-	container.Redis().Set(ctx, CacheKey(userId), balance, 0)
+	container.Redis().Set(ctx, CacheKey(userId), balance, 10*time.Minute)
 	return balance, nil
 }
 
