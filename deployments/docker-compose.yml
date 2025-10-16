@@ -162,6 +162,8 @@ services:
             TOPIC_REGULAR_PARTITIONS: ${TOPIC_REGULAR_PARTITIONS:-2}
             TOPIC_EXPRESS: ${KAFKA_TOPIC_EXPRESS}
             TOPIC_EXPRESS_PARTITIONS: ${TOPIC_EXPRESS_PARTITIONS:-20}
+            TOPIC_BALANCE: ${KAFKA_TOPIC_BALANCE}
+            TOPIC_BALANCE_PARTITIONS: ${TOPIC_BALANCE_PARTITIONS:-20}
             KAFKA_SERVER: "kafka:9092"
         depends_on:
             - kafka
@@ -179,6 +181,7 @@ services:
             echo -e 'Creating kafka topics...'
             ./kafka-topics.sh --create --topic $${TOPIC_REGULAR} --bootstrap-server $${KAFKA_SERVER} --partitions $${TOPIC_REGULAR_PARTITIONS} --replication-factor 1 --config retention.ms=3600000;
             ./kafka-topics.sh --create --topic $${TOPIC_EXPRESS} --bootstrap-server $${KAFKA_SERVER} --partitions $${TOPIC_EXPRESS_PARTITIONS} --replication-factor 1 --config retention.ms=3600000;
+            ./kafka-topics.sh --create --topic $${TOPIC_BALANCE} --bootstrap-server $${KAFKA_SERVER} --partitions $${TOPIC_BALANCE_PARTITIONS} --replication-factor 10 --config retention.ms=3600000;
 
             echo -e 'Creating internal topic: __consumer_offsets...'
             ./kafka-topics.sh --create --topic __consumer_offsets --bootstrap-server $${KAFKA_SERVER} --partitions 25 --replication-factor 1;

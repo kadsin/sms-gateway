@@ -81,6 +81,7 @@ var Env struct {
 		Topics struct {
 			Regular string `env:"KAFKA_TOPIC_REGULAR"`
 			Express string `env:"KAFKA_TOPIC_EXPRESS"`
+			Balance string `env:"KAFKA_TOPIC_BALANCE"`
 		}
 	}
 }
