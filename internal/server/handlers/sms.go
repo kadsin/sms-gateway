@@ -34,7 +34,7 @@ func SendSms(c *fiber.Ctx) error {
 
 	var user models.User
 	err = tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-		Where("email", data.ClientEmail).
+		Where("id", data.ClientId).
 		First(&user).Error
 	if err != nil {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, "user not found")

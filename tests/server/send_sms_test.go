@@ -26,11 +26,11 @@ func Test_SendSms_BadData(t *testing.T) {
 	smsContent := strings.Repeat("a", 161)
 
 	jsonBody := fmt.Sprintf(`{
-			"client_email": "%s",
+			"client_id": "%s",
 			"receiver_phone": "091",
 			"content": "%s",
 			"is_express": 10
-		}`, user.Email, smsContent)
+		}`, user.ID, smsContent)
 
 	req := httptest.NewRequest(fiber.MethodPost, "/api/sms", bytes.NewReader([]byte(jsonBody)))
 	req.Header.Set("Content-Type", "application/json")
@@ -53,11 +53,11 @@ func Test_SendSms_CalculatePrice(t *testing.T) {
 	user := tests.CreateUser()
 
 	jsonBody := fmt.Sprintf(`{
-			"client_email": "%s",
+			"client_id": "%s",
 			"receiver_phone": "+989123456789",
 			"content": "abcd",
 			"is_express": false
-		}`, user.Email)
+		}`, user.ID)
 
 	req := httptest.NewRequest(fiber.MethodPost, "/api/sms", bytes.NewReader([]byte(jsonBody)))
 	req.Header.Set("Content-Type", "application/json")
@@ -83,11 +83,11 @@ func Test_SendSms_ValidateBalance(t *testing.T) {
 	user := tests.CreateUser(10)
 
 	jsonBody := fmt.Sprintf(`{
-			"client_email": "%s",
+			"client_id": "%s",
 			"receiver_phone": "+989123456789",
 			"content": "abcdefg",
 			"is_express": false
-		}`, user.Email)
+		}`, user.ID)
 
 	req := httptest.NewRequest(fiber.MethodPost, "/api/sms", bytes.NewReader([]byte(jsonBody)))
 	req.Header.Set("Content-Type", "application/json")
@@ -106,11 +106,11 @@ func Test_SendSms_Express(t *testing.T) {
 	user := tests.CreateUser()
 
 	jsonBody := fmt.Sprintf(`{
-			"client_email": "%s",
+			"client_id": "%s",
 			"receiver_phone": "+989123456789",
 			"content": "abcdefg",
 			"is_express": true
-		}`, user.Email)
+		}`, user.ID)
 
 	req := httptest.NewRequest(fiber.MethodPost, "/api/sms", bytes.NewReader([]byte(jsonBody)))
 	req.Header.Set("Content-Type", "application/json")
@@ -129,11 +129,11 @@ func Test_SendSms_SuccessfulResponse(t *testing.T) {
 	user := tests.CreateUser()
 
 	jsonBody := fmt.Sprintf(`{
-			"client_email": "%s",
+			"client_id": "%s",
 			"receiver_phone": "+989123456789",
 			"content": "aqfdvsvsdvs",
 			"is_express": false
-		}`, user.Email)
+		}`, user.ID)
 
 	req := httptest.NewRequest(fiber.MethodPost, "/api/sms", bytes.NewReader([]byte(jsonBody)))
 	req.Header.Set("Content-Type", "application/json")
@@ -164,11 +164,11 @@ func Test_SendSms_SuccessfulStoreInClickHouse(t *testing.T) {
 	user := tests.CreateUser()
 
 	jsonBody := fmt.Sprintf(`{
-			"client_email": "%s",
+			"client_id": "%s",
 			"receiver_phone": "+989123456789",
 			"content": "aqfdvsvsdvs",
 			"is_express": false
-		}`, user.Email)
+		}`, user.ID)
 
 	req := httptest.NewRequest(fiber.MethodPost, "/api/sms", bytes.NewReader([]byte(jsonBody)))
 	req.Header.Set("Content-Type", "application/json")
