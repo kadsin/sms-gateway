@@ -68,9 +68,9 @@ flowchart LR
     w -->|Increase balance on failure| ubs
 ```
 
-# User Balance Service
+# User Balance 
 
-## Sequence
+## Service's Sequence
 ```mermaid
 sequenceDiagram
     participant c as Client
@@ -119,3 +119,12 @@ sequenceDiagram
         s->>c: new_balance
     end
 ```
+
+## Worker's Sequence
+sequenceDiagram
+    participant w as Worker
+    participant mb as Kafka
+    participant p as PostgreSQL
+
+    mb->>w: Fetch message from<br>`user.balance.change` topic
+    w->>p: Increase/Decrease balance (Atomic)

@@ -42,7 +42,7 @@ func syncRedisByPostgre(ctx context.Context, userId uuid.UUID) (float32, error) 
 	return balance, nil
 }
 
-func getRealUserBalance(ctx context.Context, userId uuid.UUID) (float32, error) {
+func getRealUserBalance(_ context.Context, userId uuid.UUID) (float32, error) {
 	tx := container.DB().Begin()
 	if tx.Error != nil {
 		return 0, tx.Error
