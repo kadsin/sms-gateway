@@ -121,6 +121,8 @@ sequenceDiagram
 ```
 
 ## Worker's Sequence
+
+```mermaid
 sequenceDiagram
     participant w as Worker
     participant mb as Kafka
@@ -128,3 +130,4 @@ sequenceDiagram
 
     mb->>w: Fetch message from<br>`user.balance.change` topic
     w->>p: Increase/Decrease balance (Atomic)
+```
