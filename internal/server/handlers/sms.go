@@ -12,7 +12,7 @@ import (
 	"github.com/kadsin/sms-gateway/internal/dtos"
 	"github.com/kadsin/sms-gateway/internal/dtos/messages"
 	"github.com/kadsin/sms-gateway/internal/server/requests"
-	userbalance "github.com/kadsin/sms-gateway/internal/user_balance"
+	"github.com/kadsin/sms-gateway/internal/wallet"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -29,21 +29,21 @@ func SendSms(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "Invalid user id")
 	}
 
-	userMux := userbalance.UserLock(userId)
+	userMux := wallet.UserLock(userId)
 	userMux.Lock()
 	defer userMux.Unlock()
 
-	userBalance, err := userbalance.Get(c.Context(), userId)
+	balance, err := wallet.Get(c.Context(), userId)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "Error on getting balance")
 	}
 
 	smsPrice := float32(len(data.Content)) * SmsPricePerChar
 
-	if userBalance < smsPrice {
+	if balance < smsPrice {
 		return fiber.NewError(
 			fiber.StatusPaymentRequired,
-			fmt.Sprintf("balance is not enough. price: %v, balance: %v", smsPrice, userBalance),
+			fmt.Sprintf("balance is not enough. price: %v, balance: %v", smsPrice, balance),
 		)
 	}
 
@@ -65,7 +65,7 @@ func SendSms(c *fiber.Ctx) error {
 		kafkaTopic = config.Env.Kafka.Topics.Express
 	}
 
-	if _, err := userbalance.Change(c.Context(), userId, -smsPrice); err != nil {
+	if _, err := wallet.Change(c.Context(), userId, -smsPrice); err != nil {
 		return err
 	}
 
@@ -75,7 +75,7 @@ func SendSms(c *fiber.Ctx) error {
 	})
 	if err != nil {
 		// Refund
-		userbalance.Change(c.Context(), userId, smsPrice)
+		wallet.Change(c.Context(), userId, smsPrice)
 		return err
 	}
 

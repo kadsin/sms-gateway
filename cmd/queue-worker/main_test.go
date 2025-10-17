@@ -9,7 +9,7 @@ import (
 	analytics_models "github.com/kadsin/sms-gateway/analytics/models"
 	"github.com/kadsin/sms-gateway/internal/container"
 	"github.com/kadsin/sms-gateway/internal/dtos/messages"
-	userbalance "github.com/kadsin/sms-gateway/internal/user_balance"
+	"github.com/kadsin/sms-gateway/internal/wallet"
 	"github.com/kadsin/sms-gateway/tests"
 	"github.com/stretchr/testify/require"
 )
@@ -47,11 +47,11 @@ func Test_Queue_SendSms(t *testing.T) {
 
 func Test_Queue_RefundOnFailure(t *testing.T) {
 	user := tests.CreateUser()
-	oldBalance, _ := userbalance.Get(context.Background(), user.ID)
+	oldBalance, _ := wallet.Get(context.Background(), user.ID)
 
 	m := tests.CreateSmsMessage(user.ID)
 	sendSms(context.Background(), &mockProvider{fail: true}, m)
 
-	newBalance, _ := userbalance.Get(context.Background(), user.ID)
+	newBalance, _ := wallet.Get(context.Background(), user.ID)
 	require.Equal(t, oldBalance+m.Price, newBalance)
 }

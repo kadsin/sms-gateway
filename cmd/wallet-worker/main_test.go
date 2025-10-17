@@ -14,10 +14,10 @@ func TestMain(m *testing.M) {
 	tests.TestMain(m)
 }
 
-func Test_BalanceWorker_UpdateUserBalance(t *testing.T) {
+func Test_WalletWorker_UpdateBalance(t *testing.T) {
 	u := tests.CreateUser(10000.5)
 
-	updateBalanceInPostgres(context.Background(), messages.UserBalance{
+	updateBalanceInPostgres(context.Background(), messages.WalletChanged{
 		ClientId: u.ID,
 		Amount:   -1000.4,
 	})

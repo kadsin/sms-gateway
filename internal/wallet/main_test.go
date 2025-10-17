@@ -1,4 +1,4 @@
-package userbalance
+package wallet
 
 import (
 	"context"
@@ -17,7 +17,7 @@ func TestMain(m *testing.M) {
 	tests.TestMain(m)
 }
 
-func Test_UserBalance_Get_NotExistsOnRedis(t *testing.T) {
+func Test_Wallet_Get_NotExistsOnRedis(t *testing.T) {
 	ctx := context.Background()
 
 	u := tests.CreateUser(5000)
@@ -28,7 +28,7 @@ func Test_UserBalance_Get_NotExistsOnRedis(t *testing.T) {
 	require.Equal(t, float32(5000), rb)
 }
 
-func Test_UserBalance_Increment_NotExistsOnRedis(t *testing.T) {
+func Test_Wallet_Increment_NotExistsOnRedis(t *testing.T) {
 	ctx := context.Background()
 
 	u := tests.CreateUser(5000)
@@ -39,7 +39,7 @@ func Test_UserBalance_Increment_NotExistsOnRedis(t *testing.T) {
 	require.Equal(t, float32(6000.55), rb)
 }
 
-func Test_UserBalance_Decrement(t *testing.T) {
+func Test_Wallet_Decrement(t *testing.T) {
 	ctx := context.Background()
 
 	u := tests.CreateUser(5000)
@@ -50,7 +50,7 @@ func Test_UserBalance_Decrement(t *testing.T) {
 	require.Equal(t, float32(4899.43), nb)
 }
 
-func Test_UserBalance_Change_PublishMessage(t *testing.T) {
+func Test_Wallet_Change_PublishMessage(t *testing.T) {
 	container.KafkaProducer().(*mocks.KafkaProducerMock).Flush()
 
 	c := container.KafkaConsumer("")
@@ -62,7 +62,7 @@ func Test_UserBalance_Change_PublishMessage(t *testing.T) {
 	Change(ctx, u.ID, -100.57)
 
 	m, _ := c.FetchMessage(ctx)
-	b, _ := dtos.Unmarshal[messages.UserBalance](m.Value)
+	b, _ := dtos.Unmarshal[messages.WalletChanged](m.Value)
 
 	require.Equal(t, u.ID.String(), b.ClientId.String())
 	require.Equal(t, float32(-100.57), b.Amount)

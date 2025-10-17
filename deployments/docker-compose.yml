@@ -27,17 +27,17 @@ services:
                 condition: service_started
             migrator:
                 condition: service_started
-            user-balance-worker:
+            wallet-worker:
                 condition: service_started
             redis:
                 condition: service_healthy
         ports:
             - 3030:3000
 
-    user-balance-worker:
+    wallet-worker:
         build:
             context: ..
-            dockerfile: ./deployments/user-balance-worker.Dockerfile
+            dockerfile: ./deployments/wallet-worker.Dockerfile
         environment:
             <<: *app-environments
             CONSUMER_COUNT: 25
@@ -67,7 +67,7 @@ services:
                 condition: service_started
             migrator:
                 condition: service_started
-            user-balance-worker:
+            wallet-worker:
                 condition: service_started
 
     queue-worker-express-1:

@@ -16,7 +16,7 @@ import (
 	"github.com/kadsin/sms-gateway/internal/container"
 	"github.com/kadsin/sms-gateway/internal/dtos"
 	"github.com/kadsin/sms-gateway/internal/dtos/messages"
-	userbalance "github.com/kadsin/sms-gateway/internal/user_balance"
+	"github.com/kadsin/sms-gateway/internal/wallet"
 	"github.com/kadsin/sms-gateway/tests"
 	"github.com/kadsin/sms-gateway/tests/mocks"
 	"github.com/stretchr/testify/assert"
@@ -43,7 +43,7 @@ func Test_SendSms_CalculatePrice(t *testing.T) {
 	ctx := context.Background()
 
 	user := tests.CreateUser()
-	oldBalance, _ := userbalance.Get(ctx, user.ID)
+	oldBalance, _ := wallet.Get(ctx, user.ID)
 
 	resp, _ := postSms(user.ID, "abcd", false)
 	require.Equal(t, resp.StatusCode, fiber.StatusOK)
@@ -57,7 +57,7 @@ func Test_SendSms_CalculatePrice(t *testing.T) {
 	sms, _ := dtos.Unmarshal[messages.Sms](m.Value)
 	require.Equal(t, float32(40), sms.Price)
 
-	newBalance, _ := userbalance.Get(ctx, user.ID)
+	newBalance, _ := wallet.Get(ctx, user.ID)
 	require.Equal(t, oldBalance-40, newBalance)
 }
 

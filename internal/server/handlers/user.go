@@ -5,7 +5,7 @@ import (
 	"github.com/kadsin/sms-gateway/database/models"
 	"github.com/kadsin/sms-gateway/internal/container"
 	"github.com/kadsin/sms-gateway/internal/server/requests"
-	userbalance "github.com/kadsin/sms-gateway/internal/user_balance"
+	"github.com/kadsin/sms-gateway/internal/wallet"
 )
 
 func ChangeUserBalance(c *fiber.Ctx) error {
@@ -21,7 +21,7 @@ func ChangeUserBalance(c *fiber.Ctx) error {
 		return tx.Error
 	}
 
-	if _, err := userbalance.Change(c.Context(), user.ID, data.Balance); err != nil {
+	if _, err := wallet.Change(c.Context(), user.ID, data.Balance); err != nil {
 		return err
 	}
 

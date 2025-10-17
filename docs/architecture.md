@@ -19,10 +19,10 @@ flowchart LR
         cdb[(ClickHouse)]
     end
 
-    subgraph User_Balance_Side["User Balance Service"]
+    subgraph User_Balance_Side["Wallet Service"]
         pdb[(Postgres)]
-        ubw[User Balance Worker]
-        ubs[User Balance Service]
+        ubw[Wallet Worker]
+        ubs[Wallet Service]
     end
 
     c -->|Send SMS request| hs
@@ -51,7 +51,7 @@ flowchart LR
 sequenceDiagram
     Actor c as Client
     Participant s as HTTP Server
-    Participant ubs as User Balance Service
+    Participant ubs as Wallet Service
     Participant mb as Kafka
     Participant w as Queue Worker
     Note right of w : The queue workers are<br>free to listen on express<br>topic or regular
@@ -79,14 +79,14 @@ w-->>r: Send via a provider
 w->cdb : Log as sent
 ```
 
-# User Balance
+# Wallet
 
 ## Service's Sequence
 
 ```mermaid
 sequenceDiagram
     participant c as Client
-    participant s as User Balance Service
+    participant s as Wallet Service
     participant mb as Kafka
     participant r as Redis
     participant p as PostgreSQL

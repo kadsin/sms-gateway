@@ -1,4 +1,4 @@
-package userbalance
+package wallet
 
 import (
 	"context"
@@ -30,7 +30,7 @@ func Change(ctx context.Context, userID uuid.UUID, delta float32) (float32, erro
 		return 0, err
 	}
 
-	publishOnKafka(ctx, messages.UserBalance{
+	publishOnKafka(ctx, messages.WalletChanged{
 		ClientId: userID,
 		Amount:   delta,
 	})
@@ -38,7 +38,7 @@ func Change(ctx context.Context, userID uuid.UUID, delta float32) (float32, erro
 	return float32(newBalance), nil
 }
 
-func publishOnKafka(ctx context.Context, ub messages.UserBalance) error {
+func publishOnKafka(ctx context.Context, ub messages.WalletChanged) error {
 	b, err := dtos.Marshal(ub)
 	if err != nil {
 		return err

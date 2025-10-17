@@ -1,4 +1,4 @@
-package userbalance
+package wallet
 
 import (
 	"context"
@@ -29,11 +29,11 @@ func UserLock(id uuid.UUID) *sync.Mutex {
 }
 
 func CacheKey(userID uuid.UUID) string {
-	return fmt.Sprintf("user_balance:%s", userID)
+	return fmt.Sprintf("wallet:%s", userID)
 }
 
 func syncRedisByPostgre(ctx context.Context, userId uuid.UUID) (float32, error) {
-	balance, err := getRealUserBalance(ctx, userId)
+	balance, err := getRealBalance(ctx, userId)
 	if err != nil {
 		return 0, err
 	}
@@ -42,7 +42,7 @@ func syncRedisByPostgre(ctx context.Context, userId uuid.UUID) (float32, error) 
 	return balance, nil
 }
 
-func getRealUserBalance(_ context.Context, userId uuid.UUID) (float32, error) {
+func getRealBalance(_ context.Context, userId uuid.UUID) (float32, error) {
 	tx := container.DB().Begin()
 	if tx.Error != nil {
 		return 0, tx.Error

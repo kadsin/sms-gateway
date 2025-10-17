@@ -8,9 +8,9 @@ queue-worker:
 	@go build -o ./build/queue-worker ./cmd/queue-worker
 	@./build/queue-worker $(topic)
 
-balance-worker:
-	@go build -o ./build/balance-worker ./cmd/balance-worker
-	@./build/balance-worker $(consumers)
+wallet-worker:
+	@go build -o ./build/wallet-worker ./cmd/wallet-worker
+	@./build/wallet-worker $(consumers)
 
 server:
 	@go build -o ./build/server ./cmd/server
@@ -37,7 +37,7 @@ test\:help:
 	\n\n\
 	To run tests by a filter:\
 	\n\
-		make test filter='UserBalance'\
+		make test filter='Wallet'\
 	\n\n\
 	To run tests x times:\
 	\n\

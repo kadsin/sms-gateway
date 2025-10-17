@@ -15,7 +15,7 @@ import (
 	"github.com/kadsin/sms-gateway/internal/dtos/messages"
 	"github.com/kadsin/sms-gateway/internal/qkafka"
 	"github.com/kadsin/sms-gateway/internal/sms"
-	userbalance "github.com/kadsin/sms-gateway/internal/user_balance"
+	"github.com/kadsin/sms-gateway/internal/wallet"
 )
 
 const WORKER_COUNT = 50
@@ -91,7 +91,7 @@ func sendSms(ctx context.Context, p sms.Provider, m messages.Sms) error {
 		analytics_models.LogFailure(&m)
 
 		amount := math.Abs(float64(m.Price))
-		if _, err := userbalance.Change(ctx, m.SenderClientId, float32(amount)); err != nil {
+		if _, err := wallet.Change(ctx, m.SenderClientId, float32(amount)); err != nil {
 			return err
 		}
 

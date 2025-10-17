@@ -1,4 +1,4 @@
-package userbalance
+package wallet
 
 import (
 	"context"

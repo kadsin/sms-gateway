@@ -70,7 +70,7 @@ func processMessages(ctx context.Context, consumerId int, consumer qkafka.Consum
 			continue
 		}
 
-		ub, err := dtos.Unmarshal[messages.UserBalance](m.Value)
+		ub, err := dtos.Unmarshal[messages.WalletChanged](m.Value)
 		if err != nil {
 			log.Printf("Error on unmarshalling message: %v", err)
 			continue
@@ -97,7 +97,7 @@ func catchKafkaError(err error) {
 	log.Println("Fetching ...")
 }
 
-func updateBalanceInPostgres(ctx context.Context, ub messages.UserBalance) error {
+func updateBalanceInPostgres(ctx context.Context, ub messages.WalletChanged) error {
 	return container.DB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		return tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			Model(&models.User{}).

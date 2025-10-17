@@ -4,7 +4,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type UserBalance struct {
+type WalletChanged struct {
 	ClientId uuid.UUID `json:"client_id"`
 	Amount   float32   `json:"amount"`
 }

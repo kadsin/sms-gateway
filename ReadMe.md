@@ -30,10 +30,10 @@ Run the queue worker:
 make queue-worker topic=express.sms.pending
 ```
 
-Run the balance worker:
+Run the wallet worker:
 
 ```bash
-make balance-worker consumers=25
+make wallet-worker consumers=25
 ```
 
 ---
@@ -57,7 +57,7 @@ Optional flags:
 
 -   `path=./pkg/utils` – test a specific path
 -   `scope=server` – test a specific scope in `./tests/`
--   `filter=UserBalance` – run tests matching a filter
+-   `filter=Wallet` – run tests matching a filter
 -   `verbose=t` – run tests with detailed output
 -   `race=t` – run tests in race detection mode
 -   `count=3` – run tests multiple times
