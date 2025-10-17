@@ -4,6 +4,7 @@ go 1.25.2
 
 require (
 	github.com/Netflix/go-env v0.1.2
+	github.com/bsm/redislock v0.9.4
 	github.com/go-playground/validator/v10 v10.28.0
 	github.com/gofiber/fiber/v2 v2.52.9
 	github.com/gofiber/swagger v1.1.1

@@ -26,26 +26,10 @@ func SendSms(c *fiber.Ctx) error {
 
 	userId, err := uuid.Parse(getClientId(c))
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Invalid user id")
-	}
-
-	userMux := wallet.UserLock(userId)
-	userMux.Lock()
-	defer userMux.Unlock()
-
-	balance, err := wallet.Get(c.Context(), userId)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Error on getting balance")
+		return fiber.NewError(fiber.StatusBadRequest, "invalid user id")
 	}
 
 	smsPrice := float32(len(data.Content)) * SmsPricePerChar
-
-	if balance < smsPrice {
-		return fiber.NewError(
-			fiber.StatusPaymentRequired,
-			fmt.Sprintf("balance is not enough. price: %v, balance: %v", smsPrice, balance),
-		)
-	}
 
 	smsMessage, err := generateSmsMessage(data)
 	if err != nil {
@@ -65,8 +49,16 @@ func SendSms(c *fiber.Ctx) error {
 		kafkaTopic = config.Env.Kafka.Topics.Express
 	}
 
-	if _, err := wallet.Change(c.Context(), userId, -smsPrice); err != nil {
-		return err
+	newBalance, err := wallet.Change(c.Context(), userId, -smsPrice)
+	if err != nil {
+		if err == wallet.ErrInsufficientFunds {
+			return fiber.NewError(
+				fiber.StatusPaymentRequired,
+				fmt.Sprintf("not enough balance (price %.2f, balance %.2f)", smsPrice, newBalance),
+			)
+		}
+
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
 	err = container.KafkaProducer().SendMessage(c.Context(), kafka.Message{
@@ -93,14 +85,12 @@ func generateSmsMessage(data requests.SmsRequest) (*messages.Sms, error) {
 		return nil, err
 	}
 
-	sms := &messages.Sms{
+	return &messages.Sms{
 		Id:            id,
 		ReceiverPhone: data.ReceiverPhone,
 		Content:       data.Content,
 		IsExpress:     *data.IsExpress,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
-	}
-
-	return sms, nil
+	}, nil
 }
