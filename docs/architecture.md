@@ -21,6 +21,7 @@ flowchart LR
 
     subgraph User_Balance_Side["Wallet Service"]
         pdb[(Postgres)]
+        rdb[(Redus)]
         ubw[Wallet Worker]
         ubs[Wallet Service]
     end
@@ -38,6 +39,7 @@ flowchart LR
     w -->|Log message status| cdb
     w -->|Increase balance on failure| ubs
 
+    ubs -->|Get/Cache the user balance from postgres| rdb
     ubs -->|Publish balance changing message<br/> on user.balance.change topic| mb
     mb -->|Get message from user.balance.change topic| ubw
     ubw -->|Inc/Dec the user balance in a tx<br/>and commit kafka message| pdb
@@ -70,7 +72,7 @@ end
 s->>mb : message.pending
 Note left of mb : It can publish on express<br>queue or regular
 s-->>c : Ok [requestId]
-mb->>w : message.pending<br>{maxRetry: int, retried: int}
+mb->>w : message.pending
 break Can't send sms
     w->ubs : Increase balance by message price
     w->cdb : Log as failed
