@@ -87,34 +87,36 @@ w->cdb : Log as sent
 
 ```mermaid
 sequenceDiagram
-    participant c as Client
-    participant s as Wallet Service
+    participant hs as Server
+    participant ws as Wallet Service
     participant mb as Kafka
     participant r as Redis
     participant p as PostgreSQL
 
-    c->>s: getBalance(user_id)
-    s->>r: EXISTS user_id?
+    hs->>ws: getBalance(user_id)
+    ws->>r: EXISTS user_id?
     alt YES
-        s->>r: Get user balance
+        ws->>r: Get user balance
     else NO
-        s->>p: get balance WHERE user_id
-        s->>r: SET user_id current_balance
+        ws->>p: get balance WHERE user_id
+        ws->>r: SET user_id current_balance
     end
-    s->>c: balance
+    ws->>hs: balance
 
-    c->>s: change(user_id, amount)
-    s->>r: EXISTS user_id?
+    hs->>ws: change(user_id, amount)
+    ws->r: Lock user
+    ws->>r: EXISTS user_id?
     alt YES
-        s->>r: INCRBYFLOAT amount
-        r->>s: updated balance
+        ws->>r: INCRBYFLOAT amount
+        r->>ws: updated balance
     else NO
-        s->>p: get balance WHERE user_id
-        s->>r: SET user_id current_balance
-        s->>r: INCRBYFLOAT amount
+        ws->>p: get balance WHERE user_id
+        ws->>r: SET user_id current_balance
+        ws->>r: INCRBYFLOAT amount
     end
-    s->>mb: publish `user.balance.change` message {user id, amount}
-    s->>c: new_balance
+    ws->r: Unlock user
+    ws->>mb: publish `user.balance.change` message {user id, amount}
+    ws->>hs: new_balance
 ```
 
 ## Worker's Sequence
@@ -126,5 +128,5 @@ sequenceDiagram
     participant p as PostgreSQL
 
     mb->>w: Fetch message from<br>`user.balance.change` topic
-    w->>p: Increase/Decrease balance (Atomic)
+    w->>p: Increase/Decrease balance (Update-Lock)
 ```
