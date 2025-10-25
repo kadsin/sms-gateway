@@ -63,6 +63,7 @@ sequenceDiagram
 w->mb : Listen on topics
 
 c->>s : Send a message
+s->s : Check the circuit breaker (Redis and Kafka health)
 s->ubs : Deduct message price
 
 break When client doesn't have enough balance
