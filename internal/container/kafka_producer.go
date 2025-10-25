@@ -29,7 +29,7 @@ func initKafkaProducer() {
 
 		Balancer: &kafka.LeastBytes{},
 		Dialer:   dialer,
-		Async:    false,
+		Async:    true,
 	})
 }
 

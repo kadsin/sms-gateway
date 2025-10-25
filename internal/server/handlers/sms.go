@@ -16,7 +16,7 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-const SmsPricePerChar float32 = 10 // Toman
+const SMS_PRICE_PER_CHAR float32 = 10 // Toman
 
 func SendSms(c *fiber.Ctx) error {
 	data, err := requests.Prepare[requests.SmsRequest](c)
@@ -29,14 +29,10 @@ func SendSms(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid user id")
 	}
 
-	smsPrice := float32(len(data.Content)) * SmsPricePerChar
-
 	smsMessage, err := generateSmsMessage(data)
 	if err != nil {
 		return err
 	}
-
-	smsMessage.Price = smsPrice
 	smsMessage.SenderClientId = userId
 
 	marshaledSms, err := dtos.Marshal(smsMessage)
@@ -49,12 +45,12 @@ func SendSms(c *fiber.Ctx) error {
 		kafkaTopic = config.Env.Kafka.Topics.Express
 	}
 
-	newBalance, err := wallet.Change(c.Context(), userId, -smsPrice)
+	newBalance, err := wallet.Change(c.Context(), userId, -smsMessage.Price)
 	if err != nil {
 		if err == wallet.ErrInsufficientFunds {
 			return fiber.NewError(
 				fiber.StatusPaymentRequired,
-				fmt.Sprintf("not enough balance (price %.2f, balance %.2f)", smsPrice, newBalance),
+				fmt.Sprintf("not enough balance (price %.2f, balance %.2f)", smsMessage.Price, newBalance),
 			)
 		}
 
@@ -67,7 +63,7 @@ func SendSms(c *fiber.Ctx) error {
 	})
 	if err != nil {
 		// Refund
-		wallet.Change(c.Context(), userId, smsPrice)
+		wallet.Change(c.Context(), userId, smsMessage.Price)
 		return err
 	}
 
@@ -89,6 +85,7 @@ func generateSmsMessage(data requests.SmsRequest) (*messages.Sms, error) {
 		Id:            id,
 		ReceiverPhone: data.ReceiverPhone,
 		Content:       data.Content,
+		Price:         float32(len(data.Content)) * SMS_PRICE_PER_CHAR,
 		IsExpress:     *data.IsExpress,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),

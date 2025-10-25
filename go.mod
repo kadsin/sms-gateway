@@ -13,6 +13,7 @@ require (
 	github.com/pressly/goose/v3 v3.26.0
 	github.com/redis/go-redis/v9 v9.14.0
 	github.com/segmentio/kafka-go v0.4.49
+	github.com/sony/gobreaker v1.0.0
 	github.com/stretchr/testify v1.11.0
 	golang.org/x/sync v0.17.0
 	gorm.io/driver/clickhouse v0.7.0

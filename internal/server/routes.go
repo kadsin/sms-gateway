@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/swagger"
 	"github.com/kadsin/sms-gateway/config"
 	"github.com/kadsin/sms-gateway/internal/server/handlers"
+	"github.com/kadsin/sms-gateway/internal/server/middlewares"
 )
 
 func SetupRoutes(app *fiber.App) {
@@ -13,9 +14,9 @@ func SetupRoutes(app *fiber.App) {
 
 	api := app.Group("/api")
 
-	api.Post("/user/balance", handlers.ChangeUserBalance)
-
-	api.Post("/sms", handlers.SendSms)
+	cb := middlewares.NewCircuitBreaker()
+	api.Post("/user/balance", middlewares.CircuitBreakerMiddleware(cb), handlers.ChangeUserBalance)
+	api.Post("/sms", middlewares.CircuitBreakerMiddleware(cb), handlers.SendSms)
 
 	api.Get("/reports", handlers.Reports)
 }
